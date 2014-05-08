@@ -4,7 +4,7 @@
     AUTHOR              => 'David Zurborg <zurborg@cpan.org>',
     VERSION_FROM        => 'lib/Dancer/Plugin/CRUD.pm',
     ABSTRACT_FROM       => 'lib/Dancer/Plugin/CRUD.pm',
-    LICENSE             => 'open-source',
+    LICENSE             => 'perl',
     PL_FILES            => {},
     PMLIBDIRS           => [qw[ lib ]],
     PREREQ_PM => {
