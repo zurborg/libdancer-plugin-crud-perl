@@ -1,0 +1,17 @@
+blib*
+Makefile
+Makefile.old
+Build
+_build*
+pm_to_blib*
+*.tar.gz
+.lwpcookies
+Dancer-Plugin-CRUD-*
+cover_db
+*~
+*.bak
+MYMETA.*
+INSTALL
+MANIFEST.SKIP
+README
+README.pod

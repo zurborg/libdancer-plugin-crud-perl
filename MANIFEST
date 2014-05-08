@@ -1,0 +1,10 @@
+lib/Dancer/Plugin/CRUD.pm
+LICENSE
+config/BuildOptions.pm
+Makefile.PL
+MANIFEST
+README
+INSTALL
+t/00-load.t
+t/pod-coverage.t
+t/pod.t
