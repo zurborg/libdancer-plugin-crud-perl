@@ -238,7 +238,6 @@ use Dancer::Plugin;
 
 use Text::Pluralize;
 
-use constant DEBUG => 1;
 use constant SUFFIX => '_id';
 
 my $content_types = {
