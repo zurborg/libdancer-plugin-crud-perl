@@ -59,9 +59,9 @@ This keyword lets you declare a resource your application will handle.
 
 Derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST>, this method has rewritten to provide a more slightly convention. C<get> has been renamed to C<read> and three new actions has been added: C<index>, C<prefix> and C<prefix_id>
 
-Also, L<Text::Pluralize|Text::Pluralize> is applied to resource name with count=1 for singular variant and count=2 for plural variant.
+Also, L<Text::Pluralize|Text::Pluralize> is applied to resource name with count=1 for singular variant and count=2 for plural variant. If you don't provide a singular/plural variant (i.e. resource name contains parenthesis) the singular and the plural becomes same.
 
-The id name is derived from singular resource name, appended with "C<_id>".
+The id name is derived from singular resource name, appended with C<_id>.
 
     resource 'user(s)' =>
         index  => sub { ... }, # return all users
@@ -75,6 +75,7 @@ The id name is derived from singular resource name, appended with "C<_id>".
         },
         prefix_id => sub {
           # prefixed resource in singular with id
+		  # params->{user_id}
           read '/bar' => sub { ... },
         };
 
@@ -84,20 +85,20 @@ The id name is derived from singular resource name, appended with "C<_id>".
     # prefix =>
     #   GET /users/foo
     # read =>
-    #   GET /user/:id
     #   GET /user/:id.:format
+    #   GET /user/:id
     # index =>
-    #   GET /users
     #   GET /users.:format
+    #   GET /users
     # create =>
-    #   POST /user
     #   POST /user.:format
+    #   POST /user
     # delete =>
-    #   DELETE /user/:id
     #   DELETE /user/:id.:format
+    #   DELETE /user/:id
     # update =>
-    #   PUT /user/:id
     #   PUT /user/:id.:format
+    #   PUT /user/:id
 
 The routes are created in the above order.
 
