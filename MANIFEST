@@ -12,5 +12,6 @@ t/03-helpers.t
 t/04-plugin_settings.t
 t/05-serializer_and_resource.t
 t/06-prefix.t
+t/07-suffix.t
 t/pod-coverage.t
 t/pod.t
