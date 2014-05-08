@@ -157,12 +157,14 @@ This module is released under the same terms as Perl itself.
 
 =head1 AUTHORS
 
-This module has been written by Alexis Sukrieh C<< <sukria@sukria.net> >> and Franck
-Cuny.
+This module has been rewritten by David Zurborg C<< <zurborg@cpan.org> >>, based on code written by Alexis Sukrieh C<< <sukria@sukria.net> >> and Franck Cuny.
 
 =head1 SEE ALSO
 
-L<Dancer> L<http://en.wikipedia.org/wiki/Representational_State_Transfer>
+L<Dancer>
+L<http://en.wikipedia.org/wiki/Representational_State_Transfer>
+L<Dancer::Plugin::REST>
+L<Text::Pluralize>
 
 =head1 AUTHORS
 
@@ -170,11 +172,54 @@ L<Dancer> L<http://en.wikipedia.org/wiki/Representational_State_Transfer>
 
 =item *
 
-Alexis Sukrieh <sukria@sukria.net>
+David Zurborg <zurborg@cpan.org>
 
 =item *
 
-Franck Cuny <franckc@cpan.org>
+Alexis Sukrieh <sukria@sukria.net> (Author of Dancer::Plugin::REST)
+
+=item *
+
+Franck Cuny <franckc@cpan.org> (Author of Dancer::Plugin::REST)
+
+=back
+
+=head1 BUGS
+
+Please report any bugs or feature requests trough my project management tool
+at L<http://development.david-zurb.org/projects/libdancer-plugin-crud-perl/issues/new>. I
+will be notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc Dancer::Plugin::CRUD
+
+You can also look for information at:
+
+=over 4
+
+=item * Redmine: Homepage of this module
+
+L<http://development.david-zurb.org/projects/libdancer-plugin-crud-perl>
+
+=item * RT: CPAN's request tracker
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Dancer-Plugin-CRUD>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Dancer-Plugin-CRUD>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/[Dancer-Plugin-CRUD>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/Dancer-Plugin-CRUD/>
 
 =back
 
