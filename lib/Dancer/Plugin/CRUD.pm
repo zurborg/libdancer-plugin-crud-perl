@@ -117,6 +117,13 @@ When is return value is a HTTP status code (three digits), C<status(...)> is app
 	
 The default HTTP status code ("200 OK") differs in some actions: C<create> response with "201 Created", C<delete> and C<update> response with "202 Accepted".
 
+=head3 Change of suffix
+
+The appended suffix, C<_id> for default, can be changed by setting C<< $Dancer::Plugin::CRUD::SUFFIX >>. This affects both parameter names and the suffix of parameterized C<prefix> method:
+
+	$Dancer::Plugin::CRUD::SUFFIX = 'Id';
+	resource 'User' => prefixId => sub { return param('UserId') };
+
 =head2 helpers
 
 Some helpers are available. This helper will set an appropriate HTTP status for you.
@@ -238,7 +245,7 @@ use Dancer::Plugin;
 
 use Text::Pluralize;
 
-use constant SUFFIX => '_id';
+our $SUFFIX = '_id';
 
 my $content_types = {
 	json => 'application/json',
@@ -410,9 +417,9 @@ register(resource => sub ($%) {
     push @respath => $resource1;
     my @curpath = (@respath);
     
-    if (exists $triggers{'prefix'.SUFFIX}) {
-        prefix("/${resource1}/:${resource1}".SUFFIX ,=> $triggers{'prefix'.SUFFIX});
-        delete $triggers{'prefix'.SUFFIX};
+    if (exists $triggers{'prefix'.$SUFFIX}) {
+        prefix("/${resource1}/:${resource1}".$SUFFIX ,=> $triggers{'prefix'.$SUFFIX});
+        delete $triggers{'prefix'.$SUFFIX};
     }
 
     if (exists $triggers{prefix}) {
@@ -433,7 +440,7 @@ register(resource => sub ($%) {
 				$route = "/${resource1}";
 			}
 			default {
-				$route = "/${resource1}/:${resource1}".SUFFIX;
+				$route = "/${resource1}/:${resource1}".$SUFFIX;
 			}
         }
 		
