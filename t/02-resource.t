@@ -87,15 +87,15 @@ is_deeply $r->{content}, {user => { id => 1, name => 'Foo'}},
 
 $r = dancer_response(PUT => '/user/1', { 
     body => {
-        nick => 'sukria', 
+        nick => 'foobar', 
         name => 'Foo Bar' 
     }
 });
-is_deeply $r->{content}, {user => { id => 1, name => 'Foo Bar', nick => 'sukria'}},
+is_deeply $r->{content}, {user => { id => 1, name => 'Foo Bar', nick => 'foobar'}},
     "user 1 is updated";
 
 $r = dancer_response(DELETE => '/user/1');
-is_deeply $r->{content}, {user => { id => 1, name => 'Foo Bar', nick => 'sukria'}},
+is_deeply $r->{content}, {user => { id => 1, name => 'Foo Bar', nick => 'foobar'}},
     "user 1 is deleted";
 
 $r = dancer_response(GET => '/user/1');
@@ -104,13 +104,13 @@ is_deeply $r->{content}, {user => undef},
 
 $r = dancer_response(POST => '/user', { 
     body => {
-        name => 'Franck Cuny' 
+        name => 'John Doe' 
     }
 });
-is_deeply $r->{content}, { user => { id => 2, name => "Franck Cuny" } },
+is_deeply $r->{content}, { user => { id => 2, name => "John Doe" } },
     "id is correctly increased";
 
 $r = dancer_response(GET => '/users');
-is_deeply $r->{content}, { users => { 2 => { id => 2, name => "Franck Cuny" } } },
+is_deeply $r->{content}, { users => { 2 => { id => 2, name => "John Doe" } } },
     "users index complete";
 

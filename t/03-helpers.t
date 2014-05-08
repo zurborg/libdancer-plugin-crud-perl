@@ -73,14 +73,14 @@ is_deeply $r->{content}, { user => { id => 1, name => 'Foo' } },
 $r = dancer_response(
     PUT => '/user/1',
     {   body => {
-            nick => 'sukria',
+            nick => 'foobar',
             name => 'Foo Bar'
         }
     }
 );
 is $r->{status}, 202, 'HTTP code is 202';
 is_deeply $r->{content},
-  { user => { id => 1, name => 'Foo Bar', nick => 'sukria' } },
+  { user => { id => 1, name => 'Foo Bar', nick => 'foobar' } },
   "user 1 is updated";
 
 $r = dancer_response(
@@ -96,7 +96,7 @@ is_deeply $r->{content}->{error}, 'user undef', 'valid content';
 
 $r = dancer_response( DELETE => '/user/1' );
 is_deeply $r->{content},
-  { user => { id => 1, name => 'Foo Bar', nick => 'sukria' } },
+  { user => { id => 1, name => 'Foo Bar', nick => 'foobar' } },
   "user 1 is deleted";
 is $r->{status}, 202, 'HTTP code is 202';
 
@@ -105,8 +105,8 @@ $r = dancer_response( GET => '/user/1' );
 is $r->{status}, 400, 'HTTP code is 400';
 is_deeply $r->{content}->{error}, 'id is missing', 'valid response';
 
-$r = dancer_response( POST => '/user', { body => { name => 'Franck Cuny' } } );
-is_deeply $r->{content}, { user => { id => 2, name => "Franck Cuny" } },
+$r = dancer_response( POST => '/user', { body => { name => 'John Doe' } } );
+is_deeply $r->{content}, { user => { id => 2, name => "John Doe" } },
   "id is correctly increased";
 is $r->{status}, 201, 'HTTP code is 201';
 
