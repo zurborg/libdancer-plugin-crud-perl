@@ -102,6 +102,28 @@ The id name is derived from singular resource name, appended with C<_id>.
 
 The routes are created in the above order.
 
+Hint: resources can be stacked with C<prefix>/C<prefix_id>:
+
+	resource foo =>
+		prefix => sub {
+			get '/bar' => sub {
+				return 'Hi!'
+			};
+		}, # GET /foo/bar
+		prefix_id => sub {
+			get '/bar' => sub {
+				return 'Hey '.param('foo_id')
+			}; # GET /foo/123/bar
+			resource bar =>
+				read => sub {
+					return 'foo is '
+						. param('foo_id')
+						.' and bar is '
+						. param('bar_id')
+					}
+				}; # GET /foo/123/bar/456
+		};
+
 When is return value is a HTTP status code (three digits), C<status(...)> is applied to it. A second return value may be the value to be returned to the client itself:
 
 	sub {
