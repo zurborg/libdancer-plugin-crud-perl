@@ -8,7 +8,10 @@
     PL_FILES            => {},
     PMLIBDIRS           => [qw[ lib ]],
     PREREQ_PM => {
-        'Test::More' => 0,
+        'Test::More'		=> 0,
+		'Modern::Perl'		=> 0,
+		'Dancer'			=> 1.312,
+		'Text::Pluralize'	=> 1.1,
     },
     dist => {
         COMPRESS            => 'gzip -9f',
