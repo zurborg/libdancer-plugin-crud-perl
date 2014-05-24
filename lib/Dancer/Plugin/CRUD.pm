@@ -45,7 +45,7 @@ This plugin is derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST> and hel
 use Carp 'croak';
 use Dancer ':syntax';
 use Dancer::Plugin;
-
+use Sub::Name;
 use Text::Pluralize;
 
 our $SUFFIX = '_id';
@@ -137,7 +137,9 @@ our $default_serializer;
 sub _generate_sub($) {
 	my %options = %{ shift() };
 	
-	return sub {
+	my $subname = join('_', @{ $options{curpath} }[-1], $options{action});
+	
+	return subname($subname, sub {
 		my @ret = $options{coderef}->(@{ $options{curpath} });
 		if (@ret and ref $ret[0] eq '' and $ret[0] =~ m{^\d{3}$}) {
 			# return ($http_status_code, ...)
@@ -160,7 +162,7 @@ sub _generate_sub($) {
 		}
 		# return payload
 		return (wantarray ? @ret : $ret[0]);
-	};
+	});
 }
 
 =head1 METHODS
