@@ -137,7 +137,8 @@ our $default_serializer;
 sub _generate_sub($) {
 	my %options = %{ shift() };
 	
-	my $subname = join('_', @{ $options{curpath} }[-1], $options{action});
+	my $resname = @{ $options{curpath} }[-1];
+	my $subname = join('_', $resname, $options{action});
 	
 	return subname($subname, sub {
 		my @ret = $options{coderef}->(@{ $options{curpath} });
