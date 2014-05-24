@@ -14,5 +14,6 @@ t/05-serializer_and_resource.t
 t/06-prefix.t
 t/07-suffix.t
 t/08-stacking.t
+t/09-validate.t
 t/pod-coverage.t
 t/pod.t

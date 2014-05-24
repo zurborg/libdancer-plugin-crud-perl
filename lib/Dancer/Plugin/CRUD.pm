@@ -133,15 +133,49 @@ my %http_codes = (
 
 our @respath;
 our $default_serializer;
+our $validation_rules = {};
 
 sub _generate_sub($) {
 	my %options = %{ shift() };
 	
 	my $resname = @{ $options{curpath} }[-1];
+	my $rules = [ map { $validation_rules->{$_}->{generic} } grep { exists $validation_rules->{$_} } reverse @{ $options{curpath} } ];
+	if (@$rules > 0) {
+		push @$rules, $validation_rules->{$resname}->{$options{action}}
+			if exists $validation_rules->{$resname}->{$options{action}};
+			
+		$rules = {
+			fields  => [ map { ( @{ $_->{fields}  } ) } grep { exists $_->{fields}  } @$rules ],
+			checks  => [ map { ( @{ $_->{checks}  } ) } grep { exists $_->{checks}  } @$rules ],
+			filters => [ map { ( @{ $_->{filters} } ) } grep { exists $_->{filters} } @$rules ],
+		};
+	} else {
+		$rules = undef;
+	}
+	
+	my @idfields = map { $_.$SUFFIX } @{ $options{curpath} };
+	
 	my $subname = join('_', $resname, $options{action});
 	
 	return subname($subname, sub {
+		if (defined $rules) {
+			use Validate::Tiny ();
+			my $result = Validate::Tiny->new(scalar params, {
+				%$rules,
+				fields => [
+					@idfields,
+					@{ $rules->{fields} }
+				]
+			});
+			unless ($result->success) {
+				status(400);
+				return { error => $result->error };
+			}
+			var validate => $result;
+		}
+		
 		my @ret = $options{coderef}->(@{ $options{curpath} });
+		
 		if (@ret and ref $ret[0] eq '' and $ret[0] =~ m{^\d{3}$}) {
 			# return ($http_status_code, ...)
 			if ($ret[0] >= 400) {
@@ -327,6 +361,10 @@ register(resource => sub ($%) {
     
     push @respath => $resource1;
     my @curpath = (@respath);
+	
+	if (exists $triggers{rules}) {
+		$validation_rules->{$resource1} = delete $triggers{rules};
+	}
     
     if (exists $triggers{'prefix'.$SUFFIX}) {
         prefix("/${resource1}/:${resource1}".$SUFFIX ,=> $triggers{'prefix'.$SUFFIX});
