@@ -347,6 +347,74 @@ The appended suffix, C<_id> for default, can be changed by setting C<< $Dancer::
 	$Dancer::Plugin::CRUD::SUFFIX = 'Id';
 	resource 'User' => prefixId => sub { return param('UserId') };
 
+=head3 Automatic validation of params
+
+Synopsis:
+
+    resource foo =>
+        validation => {
+            generic => {
+                checks => [
+                    foo_id => Validate::Tiny::is_like(qr{^\d+})
+                ]
+            },
+        },
+        read => sub {
+            $foo_id = var('validate')->data('foo_id');
+        },
+	;
+
+The keyword C<validation> specifies rules for L<Validation::Tiny|Validation::Tiny>. The rules and the result of C<Dancer::params()> are applied to C<Validate::Tiny::new> and stored in C<var('validate')>.
+
+The hashref C<validation> accepts seven keywords:
+
+=over 4
+
+=item I<generic>
+
+These are generic rules, used in every action. For the actions I<index> and I<create>, the fields I<<< C<< $resource >>_id >>> are ignored, since they aren't needed.
+
+=item I<index>, I<create>, I<read>, I<update>, I<delete>
+
+These rules are merged together with I<generic>.
+
+=item I<prefix>, I<prefix_id>
+
+These rules are merged together with I<generic>, but they can only used when C<resource()> is used in the prefix subs.
+
+=back
+
+The id-fields (I<<< C<< $resource >>_id >>>, ...) are automatically prepended to the I<fields> param of Validate::Tiny. There is no need to define they especially.
+
+An advantage is the feature of stacking resources and to define validation rules only once.
+
+Example:
+
+    resource foo =>
+        validation => {
+            generic => {
+                checks => [
+                    foo_id => Validate::Tiny::is_like(qr{^\d+})
+                ]
+            },
+        },
+		prefix_id => sub {
+			resource bar =>
+				validation => {
+					generic => {
+						checks => [
+							bar_id => Validate::Tiny::is_like(qr{^\d+})
+						]
+					},
+				},
+				read => sub {
+					$foo_id = var('validate')->data('foo_id');
+					$bar_id = var('validate')->data('foo_id');
+				},
+			;
+		},
+	;
+
 =cut
 
 register(resource => sub ($%) {
