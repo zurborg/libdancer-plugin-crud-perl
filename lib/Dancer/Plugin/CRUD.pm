@@ -153,7 +153,9 @@ sub _generate_sub($) {
 		$rules = undef;
 	}
 	
-	my @idfields = map { $_.$SUFFIX } @{ $options{curpath} };
+	my @idfields = map { $_.$SUFFIX }
+	               grep { (($options{action} =~ m'^(index|create)$') and ($_ eq $resname)) ? 0 : 1 }
+				   @{ $options{curpath} };
 	
 	my $subname = join('_', $resname, $options{action});
 	
