@@ -28,7 +28,7 @@ try {
     set serialzier => 'JSON';
 
     resource foo =>
-        rules => {
+        validation => {
             generic => {
                 checks => [
                     foo_id => [ Validate::Tiny::is_in([qw[ 123 ]]) ]
@@ -49,7 +49,7 @@ try {
         },
         prefix_id => sub {
             resource bar =>
-                rules => {
+                validation => {
                     generic => {
                         checks => [
                             bar_id => [ Validate::Tiny::is_in([qw[ 456 ]]) ]

@@ -362,8 +362,8 @@ register(resource => sub ($%) {
     push @respath => $resource1;
     my @curpath = (@respath);
 	
-	if (exists $triggers{rules}) {
-		$validation_rules->{$resource1} = delete $triggers{rules};
+	if (exists $triggers{validation}) {
+		$validation_rules->{$resource1} = delete $triggers{validation};
 	}
     
     if (exists $triggers{'prefix'.$SUFFIX}) {
