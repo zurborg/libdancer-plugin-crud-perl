@@ -266,7 +266,7 @@ register prepare_serializer_for_format => sub () {
 
 This keyword lets you declare a resource your application will handle.
 
-Derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST>, this method has rewritten to provide a more slightly convention. C<get> has been renamed to C<read> and three new actions has been added: C<index>, C<prefix> and C<prefix_id>
+Derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST>, this method has rewritten to provide a more slightly convention. C<get> has been renamed to C<read> and three new actions has been added: C<index>, C<patch>, C<prefix> and C<prefix_id>
 
 Also, L<Text::Pluralize|Text::Pluralize> is applied to resource name with count=1 for singular variant and count=2 for plural variant. If you don't provide a singular/plural variant (i.e. resource name contains parenthesis) the singular and the plural becomes same.
 
@@ -278,6 +278,7 @@ The id name is derived from singular resource name, appended with C<_id>.
         create => sub { ... }, # create a new user with params->{user}
         delete => sub { ... }, # delete user where id = params->{user_id}
         update => sub { ... }, # update user with params->{user}
+        patch  => sub { ... }, # patches user with params->{user}
         prefix => sub {
           # prefixed resource in plural
           read '/foo' => sub { ... },
@@ -455,7 +456,7 @@ register(resource => sub ($%) {
         delete $triggers{prefix};
     }
 
-    foreach my $action (qw(read index create delete update)) {
+    foreach my $action (qw(read index create delete update patch)) {
         next unless exists $triggers{$action};
 
 		my $route;
