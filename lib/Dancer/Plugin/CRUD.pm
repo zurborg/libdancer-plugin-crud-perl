@@ -485,15 +485,15 @@ register(resource => sub ($%) {
     pop @respath;
 });
 
-=head2 C<< inherit >>
+=head2 C<< wrap >>
 
-This keyword inherits validation rules and format accessors. For return values see C<resource>.
+This keyword wraps validation rules and format accessors. For return values see C<resource>.
 
 Synopsis:
 
 	resource foo =>
 		prefix_id => sub {
-			inherit GET => bar => sub {
+			wrap GET => bar => sub {
 				# same as get('/bar', sub { ... });
 				# and get('/bar.:format', sub { ... });
 				# var('validate') is also availble,
@@ -502,18 +502,18 @@ Synopsis:
 		},
 	;
 
-I<inherit> uses the same wrapper as for the actions in I<resource>. Any beviour there also applies here. For a better explaination, these resolves to the same routes:
+I<wrap> uses the same wrapper as for the actions in I<resource>. Any beviour there also applies here. For a better explaination, these resolves to the same routes:
 
 	resource foo => read => sub { ... };
-	inherit read => foo => sub { ... };
+	wrap read => foo => sub { ... };
 
 The first argument is an CRUD action (I<index>, I<create>, I<read>, I<update>, I<delete>) or a HTTP method (I<GET>, I<POST>, I<PUT>, I<DELETE>, I<PATCH>) and is case-insensitve. The second argument is a route name. A leading slash will be prepended if the route contains to slashes. The third argument is the well known coderef.
 
-Please keep in mind that I<inherit> creates two routes: I<<< /C<< $route >> >>> and I<<< /C<< $route >>.:format >>>.
+Please keep in mind that I<wrap> creates two routes: I<<< /C<< $route >> >>> and I<<< /C<< $route >>.:format >>>.
 
 =cut
 
-register(inherit => sub($$&) {
+register(wrap => sub($$&) {
 	my ($action, $route, $coderef) = @_;
 
 	my $sub = _generate_sub({

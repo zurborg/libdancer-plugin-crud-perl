@@ -41,11 +41,11 @@ try {
             },
         },
         prefix_id => sub {
-			inherit GET    => get    => sub { return var('validate')->data };
-			inherit POST   => post   => sub { return var('validate')->data };
-			inherit PUT    => put    => sub { return var('validate')->data };
-			inherit DELETE => delete => sub { return var('validate')->data };
-			inherit PATCH  => patch  => sub { return var('validate')->data };
+			wrap GET    => get    => sub { return var('validate')->data };
+			wrap POST   => post   => sub { return var('validate')->data };
+			wrap PUT    => put    => sub { return var('validate')->data };
+			wrap DELETE => delete => sub { return var('validate')->data };
+			wrap PATCH  => patch  => sub { return var('validate')->data };
         };
 }
 
