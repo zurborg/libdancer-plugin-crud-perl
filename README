@@ -2,7 +2,7 @@ NAME
     Dancer::Plugin::CRUD - A plugin for writing RESTful apps with Dancer
 
 VERSION
-    Version 1.011
+    Version 1.02
 
 DESCRIPTION
     This plugin is derived from Dancer::Plugin::REST and helps you write a
