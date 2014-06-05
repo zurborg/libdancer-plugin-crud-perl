@@ -309,6 +309,9 @@ The id name is derived from singular resource name, appended with C<_id>.
     # update =>
     #   PUT /user/:id.:format
     #   PUT /user/:id
+    # patch =>
+    #   PATCH /user.:format
+    #   PATCH /user
 
 The routes are created in the above order.
 
@@ -394,7 +397,7 @@ These rules are merged together with I<generic>, but they can only used when C<r
 
 =back
 
-The id-fields (I<<< C<< $resource >>_id >>>, ...) are automatically prepended to the I<fields> param of Validate::Tiny. There is no need to define they especially.
+The id-fields (I<<< C<< $resource >>_id >>>, ...) are automatically prepended to the I<fields> param of Validate::Tiny. There is no need to define them especially.
 
 An advantage is the feature of stacking resources and to define validation rules only once.
 
