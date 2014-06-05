@@ -530,10 +530,12 @@ Returns a list of all created L<Dancer::Route|Dancer::Route> objects.
 
 register(wrap => sub($$&) {
 	my ($action, $route, $coderef) = @_;
+	
+	my @route = grep { defined and length } split m{/+}, $route;
 
 	my $sub = _generate_sub({
 		action => lc($action),
-		curpath => [ @respath ],
+		curpath => [ @respath, @route ],
 		coderef => $coderef
 	});
 	
