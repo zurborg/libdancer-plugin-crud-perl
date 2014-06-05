@@ -315,6 +315,8 @@ The id name is derived from singular resource name, appended with C<_id>.
 
 The routes are created in the above order.
 
+Returns a hash with arrayrefs of all created L<Dancer::Route|Dancer::Route> objects.
+	
 Hint: resources can be stacked with C<prefix>/C<prefix_id>:
 
 	resource foo =>
@@ -458,6 +460,8 @@ register(resource => sub ($%) {
         prefix("/${resource2}" => $triggers{prefix});
         delete $triggers{prefix};
     }
+	
+	my %routes;
 
     foreach my $action (qw(read index create delete update patch)) {
         next unless exists $triggers{$action};
@@ -481,11 +485,17 @@ register(resource => sub ($%) {
 			curpath => [ @respath ],
 			coderef => $triggers{$action}
 		});
+		
+		$routes{$action} = [];
 
-		$triggers_map{$action}->($_ => $sub) foreach ($route.'.:format', $route);
+		foreach ($route.'.:format', $route) {
+			push @{$routes{$action}} => $triggers_map{$action}->($_ => $sub)
+		}
     }
     
     pop @respath;
+	
+	return %routes;
 });
 
 =head2 C<< wrap >>
@@ -514,6 +524,8 @@ The first argument is an CRUD action (I<index>, I<create>, I<read>, I<update>, I
 
 Please keep in mind that I<wrap> creates two routes: I<<< /C<< $route >> >>> and I<<< /C<< $route >>.:format >>>.
 
+Returns a list of all created L<Dancer::Route|Dancer::Route> objects.
+
 =cut
 
 register(wrap => sub($$&) {
@@ -527,7 +539,13 @@ register(wrap => sub($$&) {
 	
 	$route = '/'.$route unless $route =~ m{/};
 	
-	$triggers_map{lc($action)}->($_ => $sub) foreach ($route.'.:format', $route);
+	my @routes;
+	
+	foreach ($route.'.:format', $route) {
+		push @routes => $triggers_map{lc($action)}->($_ => $sub)
+	}
+	
+	return @routes;
 });
 
 =head2 helpers
