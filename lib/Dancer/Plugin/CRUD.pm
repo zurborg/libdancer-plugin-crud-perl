@@ -187,7 +187,7 @@ sub _generate_sub($) {
 		
 		my @ret = $options{coderef}->(@{ $options{curpath} });
 		
-		if (@ret and ref $ret[0] eq '' and $ret[0] =~ m{^\d{3}$}) {
+		if (@ret and defined $ret[0] and ref $ret[0] eq '' and $ret[0] =~ m{^\d{3}$}) {
 			# return ($http_status_code, ...)
 			if ($ret[0] >= 400) {
 				# return ($http_error_code, $error_message)
