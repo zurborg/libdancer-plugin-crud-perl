@@ -11,14 +11,6 @@ $dancer_version =~ s/_//g;
 plan skip_all => "Dancer 1.3059_01 is needed for this test (you have $dancer_version)"
   if $dancer_version < 1.305901;
 
-try {
-    require Validate::Tiny;
-} catch {
-    plan skip_all => "Validate::Tiny is needed for this test";
-};
-
-#plan tests => 1;
-
 {
     package Webservice;
     use Dancer;

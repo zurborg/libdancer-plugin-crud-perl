@@ -47,6 +47,7 @@ use Dancer ':syntax';
 use Dancer::Plugin;
 use Sub::Name;
 use Text::Pluralize;
+use Validate::Tiny ();
 
 our $SUFFIX = '_id';
 
@@ -170,7 +171,6 @@ sub _generate_sub($) {
 	
 	return subname($subname, sub {
 		if (defined $rules) {
-			use Validate::Tiny ();
 			my $result = Validate::Tiny->new(scalar params, {
 				%$rules,
 				fields => [

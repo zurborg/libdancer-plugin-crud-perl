@@ -13,6 +13,7 @@
 		'Sub::Name'         => 0,
 		'Dancer'			=> 1.312,
 		'Text::Pluralize'	=> 1.1,
+		'Validate::Tiny'	=> 1.005,
     },
     dist => {
         COMPRESS            => 'gzip -9f',
