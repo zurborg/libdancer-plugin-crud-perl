@@ -6,6 +6,9 @@ perl:
   - "5.12"
   - "5.10"
 
+before_script:
+  - cpanm Pod::Readme
+  
 script: "perl Makefile-Development.PL && make all && make disttest"
 
 notifications:
