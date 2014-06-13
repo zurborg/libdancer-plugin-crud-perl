@@ -54,6 +54,12 @@ sub MY::postamble {
 				'pod2readme "$<" "$@" README'
 			]
 		},
+		'README.md' => {
+			preq => [qw[ documentation/README.pod ]],
+			cmds => [
+				'pod2markdown "$<" "$@"'
+			]
+		},
 		INSTALL => {
 			preq => [qw[ documentation/INSTALL.pod ]],
 			cmds => [
@@ -61,7 +67,7 @@ sub MY::postamble {
 			]
 		},
 		documentation => {
-			preq => [qw[ README INSTALL ]],
+			preq => [qw[ README README.md INSTALL ]],
 		},
 		'all' => {
 			preq => [qw[ documentation MANIFEST.SKIP ]]

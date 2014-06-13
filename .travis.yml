@@ -8,6 +8,7 @@ perl:
 
 before_script:
   - cpanm Pod::Readme
+  - cpanm Pod::Markdown
   
 script: "perl Makefile-Development.PL && make all && make disttest"
 
