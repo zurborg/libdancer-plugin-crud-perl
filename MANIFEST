@@ -17,5 +17,6 @@ t/08-stacking.t
 t/09-validate.t
 t/10-wrap.t
 t/11-patch.t
+t/12-chain.t
 t/pod-coverage.t
 t/pod.t

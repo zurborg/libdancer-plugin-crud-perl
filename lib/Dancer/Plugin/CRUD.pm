@@ -55,6 +55,8 @@ my $content_types = {
 	json => 'application/json',
 	yml  => 'text/x-yaml',
 	xml  => 'application/xml',
+	dump => 'text/x-perl',
+	jsonp => 'text/javascript',
 };
 
 my %triggers_map = (
@@ -144,6 +146,7 @@ my %http_codes = (
 our @respath;
 our $default_serializer;
 our $validation_rules = {};
+our $chains = {};
 
 sub _generate_sub($) {
 	my %options = %{ shift() };
@@ -162,6 +165,8 @@ sub _generate_sub($) {
 	} else {
 		$rules = undef;
 	}
+	
+	my $chain = [ map { $chains->{$_} } grep { exists $chains->{$_} } @{ $options{curpath} } ];
 	
 	my @idfields = map { $_.$SUFFIX }
 	               grep { (($options{action} =~ m'^(index|create)$') and ($_ eq $resname)) ? 0 : 1 }
@@ -183,6 +188,14 @@ sub _generate_sub($) {
 				return { error => $result->error };
 			}
 			var validate => $result;
+		}
+		
+		{
+			my @chain = @$chain;
+			unless ($options{action} ~~ [qw[ read update delete patch ]]) {
+				pop @chain;
+			}
+			$_->() for @chain;
 		}
 		
 		my @ret = $options{coderef}->(@{ $options{curpath} });
@@ -230,6 +243,7 @@ register prepare_serializer_for_format => sub () {
 	my $conf        = plugin_setting;
 	my $serializers = {
 		'json' => 'JSON',
+		'jsonp' => 'JSONP',
 		'yml'  => 'YAML',
 		'xml'  => 'XML',
 		'dump' => 'Dumper',
@@ -451,6 +465,10 @@ register(resource => sub ($%) {
 		$validation_rules->{$resource1} = delete $triggers{validation};
 	}
     
+    if (exists $triggers{chain}) {
+        $chains->{$resource1} = delete $triggers{chain};
+    }
+	
     if (exists $triggers{'prefix'.$SUFFIX}) {
         prefix("/${resource1}/:${resource1}".$SUFFIX ,=> $triggers{'prefix'.$SUFFIX});
         delete $triggers{'prefix'.$SUFFIX};
@@ -481,12 +499,14 @@ register(resource => sub ($%) {
         }
 		
 		my $sub = _generate_sub({
-			action => $action,
+			action  => $action,
 			curpath => [ @respath ],
-			coderef => $triggers{$action}
+			coderef => $triggers{$action},
 		});
 		
 		$routes{$action} = [];
+		
+		push @{$routes{$action}} => $triggers_map{get}->($route.'/'.$action.'.:format' => $sub);
 
 		foreach ($route.'.:format', $route) {
 			push @{$routes{$action}} => $triggers_map{$action}->($_ => $sub)
@@ -528,7 +548,7 @@ Returns a list of all created L<Dancer::Route|Dancer::Route> objects.
 
 =cut
 
-register(wrap => sub($$&) {
+register(wrap => sub($$$) {
 	my ($action, $route, $coderef) = @_;
 	
 	my @route = grep { defined and length } split m{/+}, $route;
@@ -536,7 +556,7 @@ register(wrap => sub($$&) {
 	my $sub = _generate_sub({
 		action => lc($action),
 		curpath => [ @respath, @route ],
-		coderef => $coderef
+		coderef => $coderef,
 	});
 	
 	$route = '/'.$route unless $route =~ m{/};
