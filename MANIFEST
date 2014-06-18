@@ -8,6 +8,7 @@ INSTALL
 t/00-load.t
 t/01-prepare_serializer_for_format.t
 t/02-resource.t
+t/02-resource_alt.t
 t/03-helpers.t
 t/04-plugin_settings.t
 t/05-serializer_and_resource.t
