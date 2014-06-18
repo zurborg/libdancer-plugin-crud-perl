@@ -76,6 +76,13 @@ my %triggers_map = (
 	patch   => \&patch,
 );
 
+my %alt_syntax = (
+	get     => 'read',
+	post    => 'create',
+	put     => 'update',
+	del     => 'delete',
+);
+
 my %http_codes = (
 
     # 1xx
@@ -460,7 +467,12 @@ register(resource => sub ($%) {
     
     push @respath => $resource1;
     my @curpath = (@respath);
+	my $altsyntax = 0;
 	
+	if (exists $triggers{altsyntax}) {
+		$altsyntax = delete $triggers{altsyntax};
+	}
+    
 	if (exists $triggers{validation}) {
 		$validation_rules->{$resource1} = delete $triggers{validation};
 	}
@@ -481,7 +493,7 @@ register(resource => sub ($%) {
 	
 	my %routes;
 
-    foreach my $action (qw(read index create delete update patch)) {
+    foreach my $action (qw(index create read delete update patch)) {
         next unless exists $triggers{$action};
 
 		my $route;
@@ -506,11 +518,12 @@ register(resource => sub ($%) {
 		
 		$routes{$action} = [];
 		
-		push @{$routes{$action}} => $triggers_map{get}->($route.'/'.$action.'.:format' => $sub);
-
-		foreach ($route.'.:format', $route) {
-			push @{$routes{$action}} => $triggers_map{$action}->($_ => $sub)
+		if ($altsyntax) {
+			push @{$routes{$action}} => $triggers_map{  get  }->($route.'/'.$action.'.:format' => $sub);
+			push @{$routes{$action}} => $triggers_map{  get  }->($route.'/'.$action            => $sub);
 		}
+		push @{$routes{$action}} => $triggers_map{$action}->($route    .        '.:format' => $sub);
+		push @{$routes{$action}} => $triggers_map{$action}->($route                        => $sub);
     }
     
     pop @respath;
