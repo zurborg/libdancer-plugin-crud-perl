@@ -3,3 +3,5 @@
 ^MANIFEST.SKIP$
 ^MANIFEST.IGNORE$
 ^documentation/(README|INSTALL)\.pod$
+^.travis.yml$
+^README.md$
