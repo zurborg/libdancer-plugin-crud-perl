@@ -150,19 +150,19 @@ my %http_codes = (
     509 => 'Bandwidth Limit Exceeded',
 );
 
-our @respath;
 our $default_serializer;
-our $validation_rules = {};
-our $chains = {};
+my $stack = [];
 
 sub _generate_sub($) {
 	my %options = %{ shift() };
 	
-	my $resname = @{ $options{curpath} }[-1];
-	my $rules = [ map { $validation_rules->{$_}->{generic} } grep { exists $validation_rules->{$_} } reverse @{ $options{curpath} } ];
+	my $resname = $options{stack}->[-1]->{resname};
+
+	my $rules = [ map { $_->{validation_rules}->{generic} } grep { exists $_->{validation_rules} } reverse @{ $options{stack} } ];
+	
 	if (@$rules > 0) {
-		push @$rules, $validation_rules->{$resname}->{$options{action}}
-			if exists $validation_rules->{$resname}->{$options{action}};
+		push @$rules, $options{stack}->[-1]->{validation_rules}->{$options{action}}
+			if exists $options{stack}->[-1]->{validation_rules}->{$options{action}};
 			
 		$rules = {
 			fields  => [ map { ( @{ $_->{fields}  } ) } grep { exists $_->{fields}  } @$rules ],
@@ -173,11 +173,11 @@ sub _generate_sub($) {
 		$rules = undef;
 	}
 	
-	my $chain = [ map { $chains->{$_} } grep { exists $chains->{$_} } @{ $options{curpath} } ];
+	my $chain = [ map { $_->{chain} } grep { exists $_->{chain} } @{ $options{stack} } ];
 	
-	my @idfields = map { $_.$SUFFIX }
-	               grep { (($options{action} =~ m'^(index|create)$') and ($_ eq $resname)) ? 0 : 1 }
-				   @{ $options{curpath} };
+	my @idfields = map { $_->{resname}.$SUFFIX }
+	               grep { (($options{action} =~ m'^(index|create)$') and ($_->{resname} eq $resname)) ? 0 : 1 }
+				   @{ $options{stack} };
 	
 	my $subname = join('_', $resname, $options{action});
 	
@@ -205,7 +205,7 @@ sub _generate_sub($) {
 			$_->() for @chain;
 		}
 		
-		my @ret = $options{coderef}->(@{ $options{curpath} });
+		my @ret = $options{coderef}->(map { $_->{resname} } @{ $options{stack} });
 		
 		if (@ret and defined $ret[0] and ref $ret[0] eq '' and $ret[0] =~ m{^\d{3}$}) {
 			# return ($http_status_code, ...)
@@ -464,21 +464,23 @@ register(resource => sub ($%) {
             $resource2 = pluralize($resource2, 2);
         }
     }
-    
-    push @respath => $resource1;
-    my @curpath = (@respath);
-	my $altsyntax = 0;
 	
+	my %options;
+	push @$stack => \%options;
+	
+	$options{resname} = $resource1;
+	
+	my $altsyntax = 0;
 	if (exists $triggers{altsyntax}) {
 		$altsyntax = delete $triggers{altsyntax};
 	}
     
 	if (exists $triggers{validation}) {
-		$validation_rules->{$resource1} = delete $triggers{validation};
+		$options{validation_rules} = delete $triggers{validation};
 	}
     
     if (exists $triggers{chain}) {
-        $chains->{$resource1} = delete $triggers{chain};
+        $options{chain} = delete $triggers{chain};
     }
 	
     if (exists $triggers{'prefix'.$SUFFIX}) {
@@ -511,8 +513,8 @@ register(resource => sub ($%) {
         }
 		
 		my $sub = _generate_sub({
+			stack => $stack,
 			action  => $action,
-			curpath => [ @respath ],
 			coderef => $triggers{$action},
 		});
 		
@@ -526,7 +528,7 @@ register(resource => sub ($%) {
 		push @{$routes{$action}} => $triggers_map{$action}->($route                        => $sub);
     }
     
-    pop @respath;
+	pop @$stack;
 	
 	return %routes;
 });
@@ -565,12 +567,20 @@ register(wrap => sub($$$) {
 	my ($action, $route, $coderef) = @_;
 	
 	my @route = grep { defined and length } split m{/+}, $route;
-
+	
+	foreach my $route (@route) {
+		push @$stack => {
+			resname => $route
+		};
+	}
+	
 	my $sub = _generate_sub({
 		action => lc($action),
-		curpath => [ @respath, @route ],
+		stack => $stack,
 		coderef => $coderef,
 	});
+	
+	pop @$stack for @route;
 	
 	$route = '/'.$route unless $route =~ m{/};
 	
