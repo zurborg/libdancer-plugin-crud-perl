@@ -568,10 +568,20 @@ register(wrap => sub($$$) {
 	
 	my @route = grep { defined and length } split m{/+}, $route;
 	
+	my $parent = @$stack ? $stack->[-1] : undef;
 	foreach my $route (@route) {
 		push @$stack => {
 			resname => $route
 		};
+	}
+	
+	my $path = $action .'_'. join '-' => @route;
+	if (defined $parent) {
+		if (exists $parent->{validation_rules}) {
+			if (exists $parent->{validation_rules}->{$path}) {
+				$stack->[-1]->{validation_rules} = { lc($action) => $parent->{validation_rules}->{$path} };
+			}
+		}
 	}
 	
 	my $sub = _generate_sub({
