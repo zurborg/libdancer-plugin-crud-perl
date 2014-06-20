@@ -52,10 +52,12 @@ my @tests = (
     },
 );
 
-plan tests => scalar(@tests) * 2;
+plan tests => scalar(@tests) * 3;
 
 for my $test ( @tests ) {
     my $response = dancer_response(@{ $test->{request} });
+    like($response->status, qr{^2\d\d$}, "status is 2xx");
+    
     is($response->header('Content-Type'), 
        $test->{content_type},
        "headers have content_type set to ".$test->{content_type});

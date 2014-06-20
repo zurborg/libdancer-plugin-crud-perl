@@ -24,7 +24,7 @@ plan tests => 1;
         prefix_id => sub {
             resource bar =>
                 read => sub {
-                    return { foo => param('foo_id'), bar => param('bar_id') }
+                    return { foo => captures->{'foo_id'}, bar => captures->{'bar_id'} }
                 }
         };
 

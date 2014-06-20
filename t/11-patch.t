@@ -29,7 +29,7 @@ try {
     
     resource foo =>
 		patch => sub {
-			return scalar params;
+			return scalar captures;
 		},
 	;
 }

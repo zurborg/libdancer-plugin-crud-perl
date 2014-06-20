@@ -22,11 +22,11 @@ plan skip_all => 'tests require JSON'
     prepare_serializer_for_format;
 
     resource 'user' =>
-        index  => sub { [                            format => params->{format} ] },
-        read   => sub { [ id   => params->{user_id}, format => params->{format} ] },
-        delete => sub { [ id   => params->{user_id}, format => params->{format} ] },
-        create => sub { [ user => params->{user},    format => params->{format} ] },
-        update => sub { [ user => params->{user},    format => params->{format} ] };
+        index  => sub { [                              format => captures->{format} ] },
+        read   => sub { [ id   => captures->{user_id}, format => captures->{format} ] },
+        delete => sub { [ id   => captures->{user_id}, format => captures->{format} ] },
+        create => sub { [ user => params->{user},      format => captures->{format} ] },
+        update => sub { [ user => params->{user},      format => captures->{format} ] };
 }
 
 use Dancer::Test;

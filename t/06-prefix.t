@@ -21,8 +21,8 @@ plan tests => 2;
     set serialzier => 'JSON';
 
     resource 'user(s)' => (
-        'prefix'     => sub { get '/foo' => sub { [qw[ bar ]] } },
-        'prefix_id'  => sub { get '/foo' => sub { { user_id => param('user_id') } } },
+        'prefix'     => sub { get qr'/foo' => sub { [qw[ bar ]] } },
+        'prefix_id'  => sub { get qr'/foo' => sub { { user_id => captures->{'user_id'} } } },
     );
 
 }

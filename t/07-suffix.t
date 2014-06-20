@@ -23,7 +23,7 @@ plan tests => 1;
     set serialzier => 'JSON';
 
     resource 'User' => (
-        prefixID  => sub { get '/foo' => sub { { UserID => param('UserID') } } },
+        prefixID  => sub { get qr'/foo' => sub { { UserID => captures->{'UserID'} } } },
     );
 
 }

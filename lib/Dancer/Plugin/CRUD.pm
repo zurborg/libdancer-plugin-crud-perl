@@ -183,7 +183,12 @@ sub _generate_sub($) {
 	
 	return subname($subname, sub {
 		if (defined $rules) {
-			my $result = Validate::Tiny->new(scalar params, {
+			my $input = {
+				%{ params('query') },
+				%{ params('body') },
+				%{ captures() || {} }
+			};
+			my $result = Validate::Tiny->new($input, {
 				%$rules,
 				fields => [
 					@idfields,
@@ -231,6 +236,42 @@ sub _generate_sub($) {
 	});
 }
 
+sub _prefix {
+    my ($prefix, $cb) = @_;
+	
+	my $app = Dancer::App->current;
+
+    my $app_prefix = defined $app->app_prefix ? $app->app_prefix : "";
+    my $previous = Dancer::App->current->prefix;
+
+    if ($app->on_lexical_prefix) {
+		if (ref $previous eq 'Regexp') {
+	        $app->prefix(qr/${previous}${prefix}/);
+		} else {
+			my $previous_ = quotemeta($previous);
+	        $app->prefix(qr/${previous_}${prefix}/);
+		}
+    } else {
+		if (ref $app_prefix eq 'Regexp') {
+	        $app->prefix(qr/${app_prefix}${prefix}/);
+		} else {
+			my $app_prefix_ = quotemeta($app_prefix);
+	        $app->prefix(qr/${app_prefix_}${prefix}/);
+		}
+    }
+	
+    if (ref($cb) eq 'CODE') {
+        $app->incr_lexical_prefix;
+        eval { $cb->() };
+        my $e = $@;
+        $app->dec_lexical_prefix;
+        $app->prefix($previous);
+        die $e if $e;
+    }
+}
+
+
+
 =head1 METHODS
 
 =head2 C<< prepare_serializer_for_format >>
@@ -261,7 +302,8 @@ register prepare_serializer_for_format => sub () {
         # remember what was there before
         $default_serializer ||= setting('serializer');
 
-        my $format = param('format') or return;
+        my $format = defined captures() ? captures->{format} : undef;
+		$format ||= param('format') or return;
 
         my $serializer = $serializers->{$format} or return halt(Dancer::Error->new(
 			code    => 404,
@@ -474,7 +516,16 @@ register(resource => sub ($%) {
 	if (exists $triggers{altsyntax}) {
 		$altsyntax = delete $triggers{altsyntax};
 	}
+	
+	my $idregex = qr{[^\/\.\:\?]+};
+
+	if (exists $triggers{idregex}) {
+		$idregex = delete $triggers{idregex};
+	}
     
+	$options{prefix} = qr{/\Q$resource2\E};
+	$options{prefix_id} = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
+	
 	if (exists $triggers{validation}) {
 		$options{validation_rules} = delete $triggers{validation};
 	}
@@ -484,13 +535,21 @@ register(resource => sub ($%) {
     }
 	
     if (exists $triggers{'prefix'.$SUFFIX}) {
-        prefix("/${resource1}/:${resource1}".$SUFFIX ,=> $triggers{'prefix'.$SUFFIX});
-        delete $triggers{'prefix'.$SUFFIX};
+		my $subref = delete $triggers{'prefix'.$SUFFIX};
+		$options{prefixed_with_id} = 1;
+		my @prefixes = map { $_->{prefixed_with_id} ? $_->{prefix_id} : $_->{prefix} } grep { exists $_->{prefix} } @$stack;
+		local $" = '';
+		_prefix(qr{@prefixes}, $subref);
+		delete $options{prefixed_with_id};
     }
 
     if (exists $triggers{prefix}) {
-        prefix("/${resource2}" => $triggers{prefix});
-        delete $triggers{prefix};
+		my $subref = delete $triggers{'prefix'};
+		$options{prefixed_with_id} = 0;
+		my @prefixes = map { $_->{prefixed_with_id} ? $_->{prefix_id} : $_->{prefix} } grep { exists $_->{prefix} } @$stack;
+		local $" = '';
+		_prefix(qr{@prefixes}, $subref);
+		delete $options{prefixed_with_id};
     }
 	
 	my %routes;
@@ -502,13 +561,13 @@ register(resource => sub ($%) {
 		
 		given ($action) {
         	when ('index') {
-				$route = "/${resource2}";
+				$route = qr{/\Q$resource2\E};
 			}
 			when ('create') {
-				$route = "/${resource1}";
+				$route = qr{/\Q$resource1\E};
 			}
 			default {
-				$route = "/${resource1}/:${resource1}".$SUFFIX;
+				$route = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
 			}
         }
 		
@@ -521,11 +580,11 @@ register(resource => sub ($%) {
 		$routes{$action} = [];
 		
 		if ($altsyntax) {
-			push @{$routes{$action}} => $triggers_map{  get  }->($route.'/'.$action.'.:format' => $sub);
-			push @{$routes{$action}} => $triggers_map{  get  }->($route.'/'.$action            => $sub);
+			push @{$routes{$action}} => $triggers_map{  get  }->(qr{$route/\Q$action\E\.(?<format>json|jsonp|yml|xml|dump)} => $sub);
+			push @{$routes{$action}} => $triggers_map{  get  }->(qr{$route/\Q$action\E}                                     => $sub);
 		}
-		push @{$routes{$action}} => $triggers_map{$action}->($route    .        '.:format' => $sub);
-		push @{$routes{$action}} => $triggers_map{$action}->($route                        => $sub);
+		push @{$routes{$action}} => $triggers_map{$action}->(qr{$route\.(?<format>json|jsonp|yml|xml|dump)} => $sub);
+		push @{$routes{$action}} => $triggers_map{$action}->(   $route                                      => $sub);
     }
     
 	pop @$stack;
@@ -592,13 +651,10 @@ register(wrap => sub($$$) {
 	
 	pop @$stack for @route;
 	
-	$route = '/'.$route unless $route =~ m{/};
-	
 	my @routes;
 	
-	foreach ($route.'.:format', $route) {
-		push @routes => $triggers_map{lc($action)}->($_ => $sub)
-	}
+	push @routes => $triggers_map{lc($action)}->(qr{/\Q$route\E\.(?<format>json|jsonp|yml|xml|dump)} => $sub);
+	push @routes => $triggers_map{lc($action)}->(qr{/\Q$route\E}                                     => $sub);
 	
 	return @routes;
 });

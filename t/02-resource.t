@@ -36,7 +36,7 @@ plan tests => 9;
     }
 
     sub on_read_user {
-        my $id = params->{'user_id'};
+        my $id = captures->{'user_id'};
         return { user => defined $id ? $users->{$id} : undef };
     }
 
@@ -50,14 +50,14 @@ plan tests => 9;
     }
 
     sub on_delete_user {
-        my $id = params->{'user_id'};
+        my $id = captures->{'user_id'};
         my $deleted = $users->{$id};
         delete $users->{$id};
         { user => $deleted };
     }
 
     sub on_update_user {
-        my $id = params->{'user_id'};
+        my $id = captures->{'user_id'};
         my $user = $users->{$id};
         return { user => undef } unless defined $user;
 

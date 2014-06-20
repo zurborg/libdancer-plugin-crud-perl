@@ -99,16 +99,16 @@ is_deeply $r->{content}, {  }, 'index foo ok';
 $r = dancer_response(GET => '/foo/456');
 is_deeply $r->{content}, { error => { foo_id => 'Invalid value' } }, 'read foo wrong foo_id';
 
-$r = dancer_response(POST => '/foo', { params => { name => 'xxx' } });
+$r = dancer_response(POST => '/foo', { body => { name => 'xxx' } });
 is_deeply $r->{content}, { name => 'xxx' }, 'create foo ok';
 
-$r = dancer_response(POST => '/foo', { params => { name => 'XXX' } });
+$r = dancer_response(POST => '/foo', { body => { name => 'XXX' } });
 is_deeply $r->{content}, { error => { name => 'Invalid value' } }, 'create foo wrong name';
 
-$r = dancer_response(PUT => '/foo/123', { params => { name => 'xxx' } });
+$r = dancer_response(PUT => '/foo/123', { body => { name => 'xxx' } });
 is_deeply $r->{content}, { foo_id => 123, name => 'xxx' }, 'update foo ok';
 
-$r = dancer_response(PUT => '/foo/123', { params => { name => 'XXX' } });
+$r = dancer_response(PUT => '/foo/123', { body => { name => 'XXX' } });
 is_deeply $r->{content}, { error => { name => 'Invalid value' } }, 'update foo wrong name';
 
 $r = dancer_response(GET => '/foo/123/bar');
@@ -123,16 +123,16 @@ is_deeply $r->{content}, { error => { foo_id => 'Invalid value' } }, 'read foo->
 $r = dancer_response(GET => '/foo/456/bar/123');
 is_deeply $r->{content}, { error => { foo_id => 'Invalid value', bar_id => 'Invalid value' } }, 'read foo->bar wrong foo_id,bar_id';
 
-$r = dancer_response(PUT => '/foo/123/bar/456', { params => { name => 'xxxxx' } });
+$r = dancer_response(PUT => '/foo/123/bar/456', { body => { name => 'xxxxx' } });
 is_deeply $r->{content}, { foo_id => 123, bar_id => 456, name => 'xxxxx' }, 'update foo->bar ok';
 
-$r = dancer_response(PUT => '/foo/123/bar/456', { params => { name => 'XXXXX' } });
+$r = dancer_response(PUT => '/foo/123/bar/456', { body => { name => 'XXXXX' } });
 is_deeply $r->{content}, { error => { name => 'Invalid value' } }, 'update foo->bar wrong name';
 
-$r = dancer_response(GET => '/foo/123', { params => { garbage => '???' } });
+$r = dancer_response(GET => '/foo/123', { body => { garbage => '???' } });
 is_deeply $r->{content}, { foo_id => 123 }, 'read foo ignored garbage params';
 
-$r = dancer_response(POST => '/foo.yml', { params => { name => 'xxx', format => 'yml' } });
+$r = dancer_response(POST => '/foo.yml', { body => { name => 'xxx', format => 'yml' } });
 is_deeply $r->{content}, { name => 'xxx' }, 'create foo ignored format';
 
 diag sprintf "[%s] %s", $_->{level}, $_->{message} for @{read_logs()};
