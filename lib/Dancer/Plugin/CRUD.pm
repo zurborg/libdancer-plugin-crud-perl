@@ -20,25 +20,27 @@ This plugin is derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST> and hel
 
 =head1 SYNOPSYS
 
-    package MyWebService;
-
-    use Dancer;
-    use Dancer::Plugin::CRUD;
-
-    prepare_serializer_for_format;
-
-    read '/user/:id.:format' => sub {
-        User->find(params->{id});
-    };
-
-    # curl http://mywebservice/user/42.json
-    { "id": 42, "name": "John Foo", email: "john.foo@example.com"}
-
-    # curl http://mywebservice/user/42.yml
-    --
-    id: 42
-    name: "John Foo"
-    email: "john.foo@example.com"
+	package MyWebService;
+	
+	use Dancer;
+	use Dancer::Plugin::CRUD;
+	
+	prepare_serializer_for_format;
+	
+	my $userdb = My::UserDB->new(...);
+	
+	resource('user',
+		'read' => sub { $userdb->find(captures()->{'user_id'}) }
+	);
+	
+	# curl http://mywebservice/user/42.json
+	{ "id": 42, "name": "John Foo", email: "john.foo@example.com"}
+	
+	# curl http://mywebservice/user/42.yml
+	--
+	id: 42
+	name: "John Foo"
+	email: "john.foo@example.com"
 
 =cut
 
@@ -337,19 +339,21 @@ The id name is derived from singular resource name, appended with C<_id>.
 
     resource 'user(s)' =>
         index  => sub { ... }, # return all users
-        read   => sub { ... }, # return user where id = params->{user_id}
+        read   => sub { ... }, # return user where id = captures->{user_id}
         create => sub { ... }, # create a new user with params->{user}
-        delete => sub { ... }, # delete user where id = params->{user_id}
+        delete => sub { ... }, # delete user where id = captures->{user_id}
         update => sub { ... }, # update user with params->{user}
         patch  => sub { ... }, # patches user with params->{user}
         prefix => sub {
           # prefixed resource in plural
-          read '/foo' => sub { ... },
+		  # routes are only possible with regex!
+          get qr{/foo} => sub { ... },
         },
         prefix_id => sub {
           # prefixed resource in singular with id
-		  # params->{user_id}
-          read '/bar' => sub { ... },
+		  # captures->{user_id}
+		  # routes are only possible with regex!
+          get qr{/bar} => sub { ... },
         };
 
     # this defines the following routes:
@@ -357,15 +361,15 @@ The id name is derived from singular resource name, appended with C<_id>.
     #   GET /user/:user_id/bar
     # prefix =>
     #   GET /users/foo
-    # read =>
-    #   GET /user/:id.:format
-    #   GET /user/:id
     # index =>
     #   GET /users.:format
     #   GET /users
     # create =>
     #   POST /user.:format
     #   POST /user
+    # read =>
+    #   GET /user/:id.:format
+    #   GET /user/:id
     # delete =>
     #   DELETE /user/:id.:format
     #   DELETE /user/:id
@@ -390,14 +394,14 @@ Hint: resources can be stacked with C<prefix>/C<prefix_id>:
 		}, # GET /foo/bar
 		prefix_id => sub {
 			get '/bar' => sub {
-				return 'Hey '.param('foo_id')
+				return 'Hey '.captures->{foo_id}
 			}; # GET /foo/123/bar
 			resource bar =>
 				read => sub {
 					return 'foo is '
-						. param('foo_id')
+						. captures->{foo_id}
 						.' and bar is '
-						. param('bar_id')
+						. captures->{bar_id}
 					}
 				}; # GET /foo/123/bar/456
 		};
@@ -420,12 +424,12 @@ The default HTTP status code ("200 OK") differs in some actions: C<create> respo
 
 =head3 Change of suffix
 
-The appended suffix, C<_id> for default, can be changed by setting C<< $Dancer::Plugin::CRUD::SUFFIX >>. This affects both parameter names and the suffix of parameterized C<prefix> method:
+The appended suffix, C<_id> for default, can be changed by setting C<< $Dancer::Plugin::CRUD::SUFFIX >>. This affects both captures names and the suffix of parameterized C<prefix> method:
 
 	$Dancer::Plugin::CRUD::SUFFIX = 'Id';
-	resource 'User' => prefixId => sub { return param('UserId') };
+	resource 'User' => prefixId => sub { return captures->{'UserId'} };
 
-=head3 Automatic validation of params
+=head3 Automatic validation of parameters
 
 Synopsis:
 
@@ -442,7 +446,11 @@ Synopsis:
         },
 	;
 
-The keyword C<validation> specifies rules for L<Validation::Tiny|Validation::Tiny>. The rules and the result of C<Dancer::params()> are applied to C<Validate::Tiny::new> and stored in C<var('validate')>.
+The keyword C<validation> specifies rules for L<Validation::Tiny|Validation::Tiny>.
+
+The parameter input resolves to following order: C<params('query')>, C<params('body')>, C<captures()>.
+
+The rules and the result of C<Dancer::params()> are applied to C<Validate::Tiny::new> and stored in C<var('validate')>.
 
 The hashref C<validation> accepts seven keywords:
 
@@ -459,6 +467,20 @@ These rules are merged together with I<generic>.
 =item I<prefix>, I<prefix_id>
 
 These rules are merged together with I<generic>, but they can only used when C<resource()> is used in the prefix subs.
+
+=item I<${wrap_action}_${wrap_route}>
+
+These rules apply when in a prefix routine the I<wrap> keyword is used:
+
+	resource foo =>
+		validation => {
+			GET_bar => {
+				fields => [qw[ name ]]
+			}
+		},
+		prefix => sub {
+			wrap GET => bar => sub { ... }
+		};
 
 =back
 
