@@ -468,14 +468,18 @@ These rules are merged together with I<generic>.
 
 These rules are merged together with I<generic>, but they can only used when C<resource()> is used in the prefix subs.
 
-=item I<${wrap_action}_${wrap_route}>
+=item I<wrap>
 
-These rules apply when in a prefix routine the I<wrap> keyword is used:
+These rules apply when in a prefix or prefix_id routine the I<wrap> keyword is used:
 
 	resource foo =>
 		validation => {
-			GET_bar => {
-				fields => [qw[ name ]]
+			wrap => {
+				GET => {
+					bar => {
+						fields => [qw[ name ]]
+					}
+				}
 			}
 		},
 		prefix => sub {
@@ -656,12 +660,13 @@ register(wrap => sub($$$) {
 		};
 	}
 	
-	my $path = $action .'_'. join '-' => @route;
 	if (defined $parent) {
-		if (exists $parent->{validation_rules}) {
-			if (exists $parent->{validation_rules}->{$path}) {
-				$stack->[-1]->{validation_rules} = { lc($action) => $parent->{validation_rules}->{$path} };
-			}
+		if (exists $parent->{validation_rules} and
+			exists $parent->{validation_rules}->{wrap} and
+			exists $parent->{validation_rules}->{wrap}->{$action} and
+			exists $parent->{validation_rules}->{wrap}->{$action}->{$route}
+		) {
+			$stack->[-1]->{validation_rules} = { lc($action) => $parent->{validation_rules}->{wrap}->{$action}->{$route} };
 		}
 	}
 	
