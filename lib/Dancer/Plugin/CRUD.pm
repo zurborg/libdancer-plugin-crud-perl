@@ -8,11 +8,11 @@ Dancer::Plugin::CRUD - A plugin for writing RESTful apps with Dancer
 
 =head1 VERSION
 
-Version 1.02
+Version 1.03
 
 =cut
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 =head1 DESCRIPTION
 
