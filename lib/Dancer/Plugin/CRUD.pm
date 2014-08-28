@@ -519,6 +519,29 @@ Example:
 		},
 	;
 
+=head3 Chaining actions together
+
+To avoid redundant code, the keyword I<chain> may used to define a coderef executing every times the resource (and possible parent resources) is triggered, irrespective of the method.
+
+Example:
+
+    resource foo =>
+		chain => sub { var onetwothree => 123 },
+		index => sub { return var('onetwothree') }
+        prefix_id => sub {
+            resource bar =>
+				chain  => sub { var fourfivesix => 456 },
+				index  => sub { return var('onetwothree').var('fourfivesix') },
+			;
+        },
+	;
+
+When resource I<foo> is triggered, the variable C<onetwothree> is set to 123. When resource I<bar> is triggered, the variable C<onetwothree> is set to 123 and, of course, C<fourfivesix> is set to 456.
+
+This is useful to obtain parent objects from DB and store it into the var stack.
+
+B<WARNING>: This feature may change in a future release.
+	
 =cut
 
 register(resource => sub ($%) {
