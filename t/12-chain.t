@@ -74,12 +74,12 @@ my %var00 = (
 );
 
 my %var01 = (
-	'x-foo'	=>	'foof',
-	'x-bar'	=>	undef,
+	'x-foo'	=>	undef,
+	'x-bar'	=>	'barf',
 );
 
 my %var10 = (
-	'x-bar'	=>	'barf',
+	'x-foo'	=>	'foof',
 	'x-bar'	=>	undef,
 );
 
