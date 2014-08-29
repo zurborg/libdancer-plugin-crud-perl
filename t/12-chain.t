@@ -26,7 +26,8 @@ plan skip_all => "Dancer 1.3059_01 is needed for this test (you have $dancer_ver
 	};
 
     resource foo =>
-		chain  => sub { var 'foo' => 'foof' },
+		chain    => sub { var 'foo' => 'foof' },
+		chain_id => sub { var 'foo' => 'foof('.shift().')' },
 		index  => $sub,
 		read   => $sub,
 		create => $sub,
@@ -35,7 +36,8 @@ plan skip_all => "Dancer 1.3059_01 is needed for this test (you have $dancer_ver
 		patch  => $sub,
         prefix_id => sub {
             resource bar =>
-				chain  => sub { var 'bar' => 'barf' },
+				chain    => sub { var 'bar' => 'barf' },
+				chain_id => sub { var 'bar' => 'barf('.shift().')' },
 				index  => $sub,
 				read   => $sub,
 				create => $sub,
@@ -46,6 +48,7 @@ plan skip_all => "Dancer 1.3059_01 is needed for this test (you have $dancer_ver
         },
 	;
 
+	get '/' => $sub;
 }
 
 use Dancer::Test;
@@ -68,76 +71,86 @@ sub header_includes($%) {
 	}
 }
 
-my %var00 = (
+my %var1 = (
 	'x-foo'	=>	undef,
 	'x-bar'	=>	undef,
 );
 
-my %var01 = (
-	'x-foo'	=>	undef,
-	'x-bar'	=>	'barf',
-);
-
-my %var10 = (
+my %var2 = (
 	'x-foo'	=>	'foof',
 	'x-bar'	=>	undef,
 );
 
-my %var11 = (
+my %var3 = (
 	'x-foo'	=>	'foof',
 	'x-bar'	=>	'barf',
 );
+
+my %var4 = (
+	'x-foo'	=>	'foof(123)',
+	'x-bar'	=>	undef,
+);
+
+my %var5 = (
+	'x-foo'	=>	'foof(123)',
+	'x-bar'	=>	'barf',
+);
+
+my %var6 = (
+	'x-foo'	=>	'foof(123)',
+	'x-bar'	=>	'barf(456)',
+);
+
+$R = dancer_response('GET',    '/');
+is($R->{status} => 200, 'root ok');
+     header_includes('GET       /',  %var1);
 
 $R = dancer_response('GET',    '/foo');
 is($R->{status} => 200, 'index ok');
-     header_includes('GET       /foo',  %var00);
+     header_includes('GET       /foo',  %var2);
 
 $R = dancer_response('POST',   '/foo');
 is($R->{status} => 201, 'create ok');
-     header_includes('POST      /foo',  %var00);
+     header_includes('POST      /foo',  %var2);
 
 $R = dancer_response('GET',    '/foo/123');
 is($R->{status} => 200, 'read ok');
-     header_includes('GET       /foo/123',  %var10);
+     header_includes('GET       /foo/123',  %var4);
 
 $R = dancer_response('PUT',    '/foo/123');
 is($R->{status} => 202, 'update ok');
-     header_includes('PUT       /foo/123',  %var10);
+     header_includes('PUT       /foo/123',  %var4);
 
 $R = dancer_response('DELETE', '/foo/123');
 is($R->{status} => 202, 'delete ok');
-     header_includes('DELETE    /foo/123',  %var10);
+     header_includes('DELETE    /foo/123',  %var4);
 
 $R = dancer_response('PATCH',  '/foo/123');
 is($R->{status} => 200, 'patch ok');
-     header_includes('PATCH     /foo/123',  %var10);
-
+     header_includes('PATCH     /foo/123',  %var4);
 
 $R = dancer_response('GET',    '/foo/123/bar');
 is($R->{status} => 200, 'index ok');
-     header_includes('GET       /foo/123/bar',  %var10);
+     header_includes('GET       /foo/123/bar',  %var5);
 
 $R = dancer_response('POST',   '/foo/123/bar');
 is($R->{status} => 201, 'create ok');
-     header_includes('POST      /foo/123/bar',  %var10);
+     header_includes('POST      /foo/123/bar',  %var5);
 
 $R = dancer_response('GET',    '/foo/123/bar/456');
 is($R->{status} => 200, 'read ok');
-     header_includes('GET       /foo/123/bar/456',  %var11);
+     header_includes('GET       /foo/123/bar/456',  %var6);
 
 $R = dancer_response('PUT',    '/foo/123/bar/456');
 is($R->{status} => 202, 'update ok');
-     header_includes('PUT       /foo/123/bar/456',  %var11);
+     header_includes('PUT       /foo/123/bar/456',  %var6);
 
 $R = dancer_response('DELETE', '/foo/123/bar/456');
 is($R->{status} => 202, 'delete ok');
-     header_includes('DELETE    /foo/123/bar/456',  %var11);
+     header_includes('DELETE    /foo/123/bar/456',  %var6);
 
 $R = dancer_response('PATCH',  '/foo/123/bar/456');
 is($R->{status} => 200, 'patch ok');
-     header_includes('PATCH     /foo/123/bar/456',  %var11);
-
-
+     header_includes('PATCH     /foo/123/bar/456',  %var6);
 
 done_testing;
-

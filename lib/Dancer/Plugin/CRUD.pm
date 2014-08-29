@@ -175,7 +175,7 @@ sub _generate_sub($) {
 		$rules = undef;
 	}
 	
-	my $chain = [ map { $_->{chain} } grep { exists $_->{chain} } @{ $options{stack} } ];
+	my $chain = [ map { { fn => $_->{chain}, fnid => $_->{chain_id}, name => $_->{resname} } } @{ $options{stack} } ];
 	
 	my @idfields = map { $_->{resname}.$SUFFIX }
 	               grep { (($options{action} =~ m'^(index|create)$') and ($_->{resname} eq $resname)) ? 0 : 1 }
@@ -206,10 +206,18 @@ sub _generate_sub($) {
 		
 		{
 			my @chain = @$chain;
-			unless ($options{action} ~~ [qw[ read update delete patch ]]) {
-				pop @chain;
+			#unless ($options{action} ~~ [qw[ read update delete patch ]]) {
+			#	pop @chain;
+			#}
+			my %cap = %{ captures() || {} };
+			foreach my $ci (@chain) {
+				my ($name, $fn, $fnid) = map { $ci->{$_} } qw(name fn fnid);
+				if (exists $cap{$name.$SUFFIX} and ref $fnid eq 'CODE') {
+					$fnid->($cap{$name.$SUFFIX});
+				} elsif (ref $fn eq 'CODE') {
+					$fn->();
+				}
 			}
-			$_->() for @chain;
 		}
 		
 		my @ret = $options{coderef}->(map { $_->{resname} } @{ $options{stack} });
@@ -521,26 +529,28 @@ Example:
 
 =head3 Chaining actions together
 
-To avoid redundant code, the keyword I<chain> may used to define a coderef executing every times the resource (and possible parent resources) is triggered, irrespective of the method.
+To avoid redundant code, the keywords I<chain> and I<chain_id> may used to define coderefs called every time the resource (and possible parent resources) is triggered, respective of the method.
+
+I<chain> applies to method I<index> only. I<chain_id> (where the suffix I<_id> depends on what C<$SUFFIX> says) applies to all other methods. I<chain_id> is called with a single parameter: the value of the corresponding capture.
 
 Example:
 
     resource foo =>
-		chain => sub { var onetwothree => 123 },
-		index => sub { return var('onetwothree') }
+		chain_id => sub { var my_foo_id => shift },
+		read => sub { return var('my_foo_id') }
         prefix_id => sub {
             resource bar =>
-				chain  => sub { var fourfivesix => 456 },
-				index  => sub { return var('onetwothree').var('fourfivesix') },
+				chain_id => sub { var my_bar_id => shift },
+				read => sub { return var('my_foo_id').var('my_bar_id') },
 			;
         },
 	;
 
-When resource I<foo> is triggered, the variable C<onetwothree> is set to 123. When resource I<bar> is triggered, the variable C<onetwothree> is set to 123 and, of course, C<fourfivesix> is set to 456.
+When resource I</foo/123> is triggered, the variable C<my_foo_id> is set to 123 and the single text 123 is returned. When resource I</foo/123/bar/456> is triggered, the variable C<my_foo_id> is set to 123 and, of course, C<my_bar_id> is set to 456 and the single return text is 123456. 
 
 This is useful to obtain parent objects from DB and store it into the var stack.
 
-B<WARNING>: This feature may change in a future release.
+B<HINT>: In a earlier release the keyword I<chain> applied to all methods. If you have ever used version 1.03, please keep in mind that this behaviour has changed meanwhile.
 	
 =cut
 
@@ -581,6 +591,10 @@ register(resource => sub ($%) {
     
     if (exists $triggers{chain}) {
         $options{chain} = delete $triggers{chain};
+    }
+	
+    if (exists $triggers{"chain$SUFFIX"}) {
+        $options{chain_id} = delete $triggers{"chain$SUFFIX"};
     }
 	
     if (exists $triggers{'prefix'.$SUFFIX}) {
