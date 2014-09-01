@@ -7,6 +7,7 @@ addopt(
     depend => {
         '$(FIRST_MAKEFILE)' => 'config/BuildOptions.pm config/DevelopmentOptions.pm',
     },
+    (MM->can('signature_target') ? (SIGN => 1) : ()),
 );
 
 sub extend_makefile {

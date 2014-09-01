@@ -5,6 +5,8 @@ Makefile.PL
 MANIFEST
 README
 INSTALL
+SIGNATURE
+t/00-signature.t
 t/00-load.t
 t/01-prepare_serializer_for_format.t
 t/02-resource.t
