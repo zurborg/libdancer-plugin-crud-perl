@@ -8,11 +8,11 @@ Dancer::Plugin::CRUD - A plugin for writing RESTful apps with Dancer
 
 =head1 VERSION
 
-Version 1.03
+Version 1.04
 
 =cut
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 =head1 DESCRIPTION
 
@@ -235,6 +235,7 @@ sub _generate_sub($) {
 			}
 		} elsif (status eq '200') {
 			# http status wasn't changed yet
+			no warnings 'experimental';
 			given ($options{action}) {
 				when ('create') { status(201); }
 				when ('update') { status(202); }
@@ -622,6 +623,7 @@ register(resource => sub ($%) {
 
 		my $route;
 		
+		no warnings 'experimental';
 		given ($action) {
         	when ('index') {
 				$route = qr{/\Q$resource2\E};

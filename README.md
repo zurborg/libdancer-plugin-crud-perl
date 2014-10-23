@@ -4,7 +4,7 @@ Dancer::Plugin::CRUD - A plugin for writing RESTful apps with Dancer
 
 # VERSION
 
-Version 1.03
+Version 1.04
 
 # DESCRIPTION
 
