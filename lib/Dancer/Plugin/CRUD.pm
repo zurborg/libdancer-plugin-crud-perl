@@ -235,7 +235,7 @@ sub _generate_sub($) {
 			}
 		} elsif (status eq '200') {
 			# http status wasn't changed yet
-			no warnings 'experimental';
+			no warnings;
 			given ($options{action}) {
 				when ('create') { status(201); }
 				when ('update') { status(202); }
@@ -623,7 +623,7 @@ register(resource => sub ($%) {
 
 		my $route;
 		
-		no warnings 'experimental';
+		no warnings;
 		given ($action) {
         	when ('index') {
 				$route = qr{/\Q$resource2\E};
