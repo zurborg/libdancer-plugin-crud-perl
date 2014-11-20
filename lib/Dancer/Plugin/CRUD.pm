@@ -235,12 +235,9 @@ sub _generate_sub($) {
 			}
 		} elsif (status eq '200') {
 			# http status wasn't changed yet
-			no warnings;
-			given ($options{action}) {
-				when ('create') { status(201); }
-				when ('update') { status(202); }
-				when ('delete') { status(202); }
-			}
+			   if ($options{action} eq 'create') { status(201) }
+			elsif ($options{action} eq 'update') { status(202) }
+			elsif ($options{action} eq 'delete') { status(202) }
 		}
 		# return payload
 		return (wantarray ? @ret : $ret[0]);
@@ -622,19 +619,14 @@ register(resource => sub ($%) {
         next unless exists $triggers{$action};
 
 		my $route;
-		
-		no warnings;
-		given ($action) {
-        	when ('index') {
-				$route = qr{/\Q$resource2\E};
-			}
-			when ('create') {
-				$route = qr{/\Q$resource1\E};
-			}
-			default {
-				$route = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
-			}
-        }
+
+		if ($action eq 'index') {
+			$route = qr{/\Q$resource2\E};
+		} elsif ($action eq 'create') {
+			$route = qr{/\Q$resource1\E};
+		} else {
+			$route = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
+		}
 		
 		my $sub = _generate_sub({
 			stack => $stack,
