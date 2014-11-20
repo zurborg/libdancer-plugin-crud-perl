@@ -838,7 +838,7 @@ L<http://annocpan.org/dist/Dancer-Plugin-CRUD>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/[Dancer-Plugin-CRUD>
+L<http://cpanratings.perl.org/d/Dancer-Plugin-CRUD>
 
 =item * Search CPAN
 

@@ -32,7 +32,7 @@ You can also look for information at:
 
 - CPAN Ratings
 
-    [http://cpanratings.perl.org/d/\[Dancer-Plugin-CRUD](http://cpanratings.perl.org/d/[Dancer-Plugin-CRUD)
+    [http://cpanratings.perl.org/d/Dancer-Plugin-CRUD](http://cpanratings.perl.org/d/Dancer-Plugin-CRUD)
 
 - Search CPAN
 
