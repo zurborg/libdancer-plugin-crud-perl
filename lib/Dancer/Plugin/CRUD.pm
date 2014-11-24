@@ -1,18 +1,7 @@
+use strict;
+use warnings;
 package Dancer::Plugin::CRUD;
-
-use Modern::Perl;
-
-=head1 NAME
-
-Dancer::Plugin::CRUD - A plugin for writing RESTful apps with Dancer
-
-=head1 VERSION
-
-Version 1.04
-
-=cut
-
-our $VERSION = '1.04';
+# ABSTRACT: A plugin for writing RESTful apps with Dancer
 
 =head1 DESCRIPTION
 
@@ -50,6 +39,8 @@ use Dancer::Plugin;
 use Sub::Name;
 use Text::Pluralize;
 use Validate::Tiny ();
+
+# VERSION
 
 our $SUFFIX = '_id';
 
@@ -280,9 +271,7 @@ sub _prefix {
 
 
 
-=head1 METHODS
-
-=head2 C<< prepare_serializer_for_format >>
+=method C<< prepare_serializer_for_format >>
 
 When this pragma is used, a before filter is set by the plugin to automatically
 change the serializer when a format is detected in the URI.
@@ -333,7 +322,7 @@ register prepare_serializer_for_format => sub () {
     });
 };
 
-=head2 C<< resource >>
+=method C<< resource >>
 
 This keyword lets you declare a resource your application will handle.
 
@@ -649,7 +638,7 @@ register(resource => sub ($%) {
 	return %routes;
 });
 
-=head2 C<< wrap >>
+=method C<< wrap >>
 
 This keyword wraps validation rules and format accessors. For return values see C<resource>.
 
@@ -717,7 +706,7 @@ register(wrap => sub($$$) {
 	return @routes;
 });
 
-=head2 helpers
+=method helpers
 
 Some helpers are available. This helper will set an appropriate HTTP status for you.
 
@@ -774,84 +763,19 @@ for my $code (keys %http_codes) {
     };
 }
 
-=head1 LICENCE
-
-This module is released under the same terms as Perl itself.
-
-=head1 AUTHORS
-
-This module has been rewritten by David Zurborg C<< <zurborg@cpan.org> >>, based on code written by Alexis Sukrieh C<< <sukria@sukria.net> >> and Franck Cuny.
-
 =head1 SEE ALSO
 
-L<Dancer>
-L<http://en.wikipedia.org/wiki/Representational_State_Transfer>
-L<Dancer::Plugin::REST>
-L<Text::Pluralize>
-
-=head1 AUTHORS
-
 =over 4
 
-=item *
+=item * L<Dancer>
 
-David Zurborg <zurborg@cpan.org>
+=item * L<http://en.wikipedia.org/wiki/Representational_State_Transfer>
 
-=item *
+=item * L<Dancer::Plugin::REST>
 
-Alexis Sukrieh <sukria@sukria.net> (Author of Dancer::Plugin::REST)
-
-=item *
-
-Franck Cuny <franckc@cpan.org> (Author of Dancer::Plugin::REST)
+=item * L<Text::Pluralize>
 
 =back
-
-=head1 BUGS
-
-Please report any bugs or feature requests trough my project management tool
-at L<http://development.david-zurb.org/projects/libdancer-plugin-crud-perl/issues/new>. I
-will be notified, and then you'll automatically be notified of progress on
-your bug as I make changes.
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Dancer::Plugin::CRUD
-
-You can also look for information at:
-
-=over 4
-
-=item * Redmine: Homepage of this module
-
-L<http://development.david-zurb.org/projects/libdancer-plugin-crud-perl>
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Dancer-Plugin-CRUD>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Dancer-Plugin-CRUD>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Dancer-Plugin-CRUD>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Dancer-Plugin-CRUD/>
-
-=back
-
-=head1 COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2014 by David Zurborg <zurborg@cpan.org>.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
 
 =cut
 
