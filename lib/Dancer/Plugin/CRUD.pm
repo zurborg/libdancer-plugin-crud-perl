@@ -146,7 +146,7 @@ my %http_codes = (
 our $default_serializer;
 my $stack = [];
 
-sub _generate_sub($) {
+sub _generate_sub {
 	my %options = %{ shift() };
 	
 	my $resname = $options{stack}->[-1]->{resname};
