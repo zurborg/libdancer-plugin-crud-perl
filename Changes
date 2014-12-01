@@ -9,6 +9,9 @@ Revision history for Dancer-Plugin-CRUD
  - remove experimental features like given
  - fix typo
 
+1.030 2014-12-01
+ - change version format
+
 1.03 2014-08-28
  - added subname
  - use $resname
