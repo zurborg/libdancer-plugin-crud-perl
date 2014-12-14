@@ -12,10 +12,10 @@ plan tests => 16;
     use Dancer::Plugin::CRUD;
 
     resource 'user(s)' => (
-      'read'      => \&on_read_user,
-      'create'    => \&on_create_user,
-      'delete'    => \&on_delete_user,
-      'update'    => \&on_update_user
+        'read'   => \&on_read_user,
+        'create' => \&on_create_user,
+        'delete' => \&on_delete_user,
+        'update' => \&on_update_user
     );
 
     my $users   = {};
@@ -72,7 +72,8 @@ is_deeply $r->{content}, { user => { id => 1, name => 'Foo' } },
 
 $r = dancer_response(
     PUT => '/user/1',
-    {   body => {
+    {
+        body => {
             nick => 'foobar',
             name => 'Foo Bar'
         }
@@ -85,7 +86,8 @@ is_deeply $r->{content},
 
 $r = dancer_response(
     PUT => '/user/23',
-    {   body => {
+    {
+        body => {
             nick => 'john doe',
             name => 'John Doe'
         }
@@ -99,7 +101,6 @@ is_deeply $r->{content},
   { user => { id => 1, name => 'Foo Bar', nick => 'foobar' } },
   "user 1 is deleted";
 is $r->{status}, 202, 'HTTP code is 202';
-
 
 $r = dancer_response( GET => '/user/1' );
 is $r->{status}, 400, 'HTTP code is 400';

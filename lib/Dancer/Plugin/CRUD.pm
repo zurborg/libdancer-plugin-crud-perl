@@ -1,6 +1,8 @@
 use strict;
 use warnings;
+
 package Dancer::Plugin::CRUD;
+
 # ABSTRACT: A plugin for writing RESTful apps with Dancer
 
 =head1 DESCRIPTION
@@ -45,35 +47,35 @@ use Validate::Tiny ();
 our $SUFFIX = '_id';
 
 my $content_types = {
-	json => 'application/json',
-	yml  => 'text/x-yaml',
-	xml  => 'application/xml',
-	dump => 'text/x-perl',
-	jsonp => 'text/javascript',
+    json  => 'application/json',
+    yml   => 'text/x-yaml',
+    xml   => 'application/xml',
+    dump  => 'text/x-perl',
+    jsonp => 'text/javascript',
 };
 
 my %triggers_map = (
-	get     => \&get,
-	index   => \&get,
-	read    => \&get,
-	
-	post    => \&post,
-	create  => \&post,
-	
-	put     => \&put,
-	update  => \&put,
-	
-	del     => \&del,
-	delete  => \&del,
-	
-	patch   => \&patch,
+    get   => \&get,
+    index => \&get,
+    read  => \&get,
+
+    post   => \&post,
+    create => \&post,
+
+    put    => \&put,
+    update => \&put,
+
+    del    => \&del,
+    delete => \&del,
+
+    patch => \&patch,
 );
 
 my %alt_syntax = (
-	get     => 'read',
-	post    => 'create',
-	put     => 'update',
-	del     => 'delete',
+    get  => 'read',
+    post => 'create',
+    put  => 'update',
+    del  => 'delete',
 );
 
 my %http_codes = (
@@ -147,119 +149,166 @@ our $default_serializer;
 my $stack = [];
 
 sub _generate_sub {
-	my %options = %{ shift() };
-	
-	my $resname = $options{stack}->[-1]->{resname};
+    my %options = %{ shift() };
 
-	my $rules = [ map { $_->{validation_rules}->{generic} } grep { exists $_->{validation_rules} } reverse @{ $options{stack} } ];
-	
-	if (@$rules > 0) {
-		push @$rules, $options{stack}->[-1]->{validation_rules}->{$options{action}}
-			if exists $options{stack}->[-1]->{validation_rules}->{$options{action}};
-			
-		$rules = {
-			fields  => [ map { ( @{ $_->{fields}  } ) } grep { exists $_->{fields}  } @$rules ],
-			checks  => [ map { ( @{ $_->{checks}  } ) } grep { exists $_->{checks}  } @$rules ],
-			filters => [ map { ( @{ $_->{filters} } ) } grep { exists $_->{filters} } @$rules ],
-		};
-	} else {
-		$rules = undef;
-	}
-	
-	my $chain = [ map { { fn => $_->{chain}, fnid => $_->{chain_id}, name => $_->{resname} } } @{ $options{stack} } ];
-	
-	my @idfields = map { $_->{resname}.$SUFFIX }
-	               grep { (($options{action} =~ m'^(index|create)$') and ($_->{resname} eq $resname)) ? 0 : 1 }
-				   @{ $options{stack} };
-	
-	my $subname = join('_', $resname, $options{action});
-	
-	return subname($subname, sub {
-		if (defined $rules) {
-			my $input = {
-				%{ params('query') },
-				%{ params('body') },
-				%{ captures() || {} }
-			};
-			my $result = Validate::Tiny->new($input, {
-				%$rules,
-				fields => [
-					@idfields,
-					@{ $rules->{fields} }
-				]
-			});
-			unless ($result->success) {
-				status(400);
-				return { error => $result->error };
-			}
-			var validate => $result;
-		}
-		
-		{
-			my @chain = @$chain;
-			#unless ($options{action} ~~ [qw[ read update delete patch ]]) {
-			#	pop @chain;
-			#}
-			my %cap = %{ captures() || {} };
-			foreach my $ci (@chain) {
-				my ($name, $fn, $fnid) = map { $ci->{$_} } qw(name fn fnid);
-				if (exists $cap{$name.$SUFFIX} and ref $fnid eq 'CODE') {
-					$fnid->($cap{$name.$SUFFIX});
-				} elsif (ref $fn eq 'CODE') {
-					$fn->();
-				}
-			}
-		}
-		
-		my @ret = $options{coderef}->(map { $_->{resname} } @{ $options{stack} });
-		
-		if (@ret and defined $ret[0] and ref $ret[0] eq '' and $ret[0] =~ m{^\d{3}$}) {
-			# return ($http_status_code, ...)
-			if ($ret[0] >= 400) {
-				# return ($http_error_code, $error_message)
-				status($ret[0]);
-				return { error => $ret[1] };
-			} else {
-				# return ($http_success_code, $payload)
-				status($ret[0]);
-				return $ret[1];
-			}
-		} elsif (status eq '200') {
-			# http status wasn't changed yet
-			   if ($options{action} eq 'create') { status(201) }
-			elsif ($options{action} eq 'update') { status(202) }
-			elsif ($options{action} eq 'delete') { status(202) }
-		}
-		# return payload
-		return (wantarray ? @ret : $ret[0]);
-	});
+    my $resname = $options{stack}->[-1]->{resname};
+
+    my $rules = [
+        map  { $_->{validation_rules}->{generic} }
+        grep { exists $_->{validation_rules} } reverse @{ $options{stack} }
+    ];
+
+    if ( @$rules > 0 ) {
+        push @$rules,
+          $options{stack}->[-1]->{validation_rules}->{ $options{action} }
+          if exists $options{stack}->[-1]->{validation_rules}
+          ->{ $options{action} };
+
+        $rules = {
+            fields => [
+                map  { ( @{ $_->{fields} } ) }
+                grep { exists $_->{fields} } @$rules
+            ],
+            checks => [
+                map    { ( @{ $_->{checks} } ) }
+                  grep { exists $_->{checks} } @$rules
+            ],
+            filters => [
+                map    { ( @{ $_->{filters} } ) }
+                  grep { exists $_->{filters} } @$rules
+            ],
+        };
+    }
+    else {
+        $rules = undef;
+    }
+
+    my $chain = [
+        map {
+            {
+                fn   => $_->{chain},
+                fnid => $_->{chain_id},
+                name => $_->{resname}
+            }
+        } @{ $options{stack} }
+    ];
+
+    my @idfields = map { $_->{resname} . $SUFFIX }
+      grep {
+        (         ( $options{action} =~ m'^(index|create)$' )
+              and ( $_->{resname} eq $resname ) )
+          ? 0
+          : 1
+      } @{ $options{stack} };
+
+    my $subname = join( '_', $resname, $options{action} );
+
+    return subname(
+        $subname,
+        sub {
+            if ( defined $rules ) {
+                my $input = {
+                    %{ params('query') },
+                    %{ params('body') },
+                    %{ captures() || {} }
+                };
+                my $result = Validate::Tiny->new(
+                    $input,
+                    {
+                        %$rules, fields => [ @idfields, @{ $rules->{fields} } ]
+                    }
+                );
+                unless ( $result->success ) {
+                    status(400);
+                    return { error => $result->error };
+                }
+                var validate => $result;
+            }
+
+            {
+                my @chain = @$chain;
+
+                #unless ($options{action} ~~ [qw[ read update delete patch ]]) {
+                #	pop @chain;
+                #}
+                my %cap = %{ captures() || {} };
+                foreach my $ci (@chain) {
+                    my ( $name, $fn, $fnid ) =
+                      map { $ci->{$_} } qw(name fn fnid);
+                    if ( exists $cap{ $name . $SUFFIX }
+                        and ref $fnid eq 'CODE' )
+                    {
+                        $fnid->( $cap{ $name . $SUFFIX } );
+                    }
+                    elsif ( ref $fn eq 'CODE' ) {
+                        $fn->();
+                    }
+                }
+            }
+
+            my @ret =
+              $options{coderef}->( map { $_->{resname} } @{ $options{stack} } );
+
+            if (    @ret
+                and defined $ret[0]
+                and ref $ret[0] eq ''
+                and $ret[0] =~ m{^\d{3}$} )
+            {
+                # return ($http_status_code, ...)
+                if ( $ret[0] >= 400 ) {
+
+                    # return ($http_error_code, $error_message)
+                    status( $ret[0] );
+                    return { error => $ret[1] };
+                }
+                else {
+                    # return ($http_success_code, $payload)
+                    status( $ret[0] );
+                    return $ret[1];
+                }
+            }
+            elsif ( status eq '200' ) {
+
+                # http status wasn't changed yet
+                if    ( $options{action} eq 'create' ) { status(201) }
+                elsif ( $options{action} eq 'update' ) { status(202) }
+                elsif ( $options{action} eq 'delete' ) { status(202) }
+            }
+
+            # return payload
+            return ( wantarray ? @ret : $ret[0] );
+        }
+    );
 }
 
 sub _prefix {
-    my ($prefix, $cb) = @_;
-	
-	my $app = Dancer::App->current;
+    my ( $prefix, $cb ) = @_;
+
+    my $app = Dancer::App->current;
 
     my $app_prefix = defined $app->app_prefix ? $app->app_prefix : "";
     my $previous = Dancer::App->current->prefix;
 
-    if ($app->on_lexical_prefix) {
-		if (ref $previous eq 'Regexp') {
-	        $app->prefix(qr/${previous}${prefix}/);
-		} else {
-			my $previous_ = quotemeta($previous);
-	        $app->prefix(qr/${previous_}${prefix}/);
-		}
-    } else {
-		if (ref $app_prefix eq 'Regexp') {
-	        $app->prefix(qr/${app_prefix}${prefix}/);
-		} else {
-			my $app_prefix_ = quotemeta($app_prefix);
-	        $app->prefix(qr/${app_prefix_}${prefix}/);
-		}
+    if ( $app->on_lexical_prefix ) {
+        if ( ref $previous eq 'Regexp' ) {
+            $app->prefix(qr/${previous}${prefix}/);
+        }
+        else {
+            my $previous_ = quotemeta($previous);
+            $app->prefix(qr/${previous_}${prefix}/);
+        }
     }
-	
-    if (ref($cb) eq 'CODE') {
+    else {
+        if ( ref $app_prefix eq 'Regexp' ) {
+            $app->prefix(qr/${app_prefix}${prefix}/);
+        }
+        else {
+            my $app_prefix_ = quotemeta($app_prefix);
+            $app->prefix(qr/${app_prefix_}${prefix}/);
+        }
+    }
+
+    if ( ref($cb) eq 'CODE' ) {
         $app->incr_lexical_prefix;
         eval { $cb->() };
         my $e = $@;
@@ -268,8 +317,6 @@ sub _prefix {
         die $e if $e;
     }
 }
-
-
 
 =method C<< prepare_serializer_for_format >>
 
@@ -285,41 +332,51 @@ handlers, without explicitly handling the outgoing data format.
 =cut
 
 register prepare_serializer_for_format => sub () {
-	my $conf        = plugin_setting;
-	my $serializers = {
-		'json' => 'JSON',
-		'jsonp' => 'JSONP',
-		'yml'  => 'YAML',
-		'xml'  => 'XML',
-		'dump' => 'Dumper',
-		(exists $conf->{serializers} ? %{$conf->{serializers}} : ())
-	};
+    my $conf        = plugin_setting;
+    my $serializers = {
+        'json'  => 'JSON',
+        'jsonp' => 'JSONP',
+        'yml'   => 'YAML',
+        'xml'   => 'XML',
+        'dump'  => 'Dumper',
+        ( exists $conf->{serializers} ? %{ $conf->{serializers} } : () )
+    };
 
-    hook(before => sub {
-        # remember what was there before
-        $default_serializer ||= setting('serializer');
+    hook(
+        before => sub {
 
-        my $format = defined captures() ? captures->{format} : undef;
-		$format ||= param('format') or return;
+            # remember what was there before
+            $default_serializer ||= setting('serializer');
 
-        my $serializer = $serializers->{$format} or return halt(Dancer::Error->new(
-			code    => 404,
-			title   => "unsupported format requested",
-			message => "unsupported format requested: " . $format
-		)->render);
+            my $format = defined captures() ? captures->{format} : undef;
+            $format ||= param('format') or return;
 
-        set(serializer => $serializer);
+            my $serializer = $serializers->{$format}
+              or return halt(
+                Dancer::Error->new(
+                    code    => 404,
+                    title   => "unsupported format requested",
+                    message => "unsupported format requested: " . $format
+                )->render
+              );
 
-        # check if we were supposed to deserialize the request
-        Dancer::Serializer->process_request(Dancer::SharedData->request);
+            set( serializer => $serializer );
 
-        content_type($content_types->{$format} || setting('content_type'));
-    });
+            # check if we were supposed to deserialize the request
+            Dancer::Serializer->process_request( Dancer::SharedData->request );
 
-    hook(after => sub {
-        # put it back the way it was
-        set(serializer => $default_serializer);
-    });
+            content_type( $content_types->{$format}
+                  || setting('content_type') );
+        }
+    );
+
+    hook(
+        after => sub {
+
+            # put it back the way it was
+            set( serializer => $default_serializer );
+        }
+    );
 };
 
 =method C<< resource >>
@@ -541,102 +598,118 @@ B<HINT>: In a earlier release the keyword I<chain> applied to all methods. If yo
 	
 =cut
 
-register(resource => sub ($%) {
-    my $resource = my $resource1 = my $resource2 = shift;
-    my %triggers = @_;
-    
-    {
-        my $c = quotemeta '()|{}';
-        if ($resource =~ m{[$c]}) {
-            $resource1 = pluralize($resource1, 1);
-            $resource2 = pluralize($resource2, 2);
+register(
+    resource => sub ($%) {
+        my $resource = my $resource1 = my $resource2 = shift;
+        my %triggers = @_;
+
+        {
+            my $c = quotemeta '()|{}';
+            if ( $resource =~ m{[$c]} ) {
+                $resource1 = pluralize( $resource1, 1 );
+                $resource2 = pluralize( $resource2, 2 );
+            }
         }
-    }
-	
-	my %options;
-	push @$stack => \%options;
-	
-	$options{resname} = $resource1;
-	
-	my $altsyntax = 0;
-	if (exists $triggers{altsyntax}) {
-		$altsyntax = delete $triggers{altsyntax};
-	}
-	
-	my $idregex = qr{[^\/\.\:\?]+};
 
-	if (exists $triggers{idregex}) {
-		$idregex = delete $triggers{idregex};
-	}
-    
-	$options{prefix} = qr{/\Q$resource2\E};
-	$options{prefix_id} = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
-	
-	if (exists $triggers{validation}) {
-		$options{validation_rules} = delete $triggers{validation};
-	}
-    
-    if (exists $triggers{chain}) {
-        $options{chain} = delete $triggers{chain};
-    }
-	
-    if (exists $triggers{"chain$SUFFIX"}) {
-        $options{chain_id} = delete $triggers{"chain$SUFFIX"};
-    }
-	
-    if (exists $triggers{'prefix'.$SUFFIX}) {
-		my $subref = delete $triggers{'prefix'.$SUFFIX};
-		$options{prefixed_with_id} = 1;
-		my @prefixes = map { $_->{prefixed_with_id} ? $_->{prefix_id} : $_->{prefix} } grep { exists $_->{prefix} } @$stack;
-		local $" = '';
-		_prefix(qr{@prefixes}, $subref);
-		delete $options{prefixed_with_id};
-    }
+        my %options;
+        push @$stack => \%options;
 
-    if (exists $triggers{prefix}) {
-		my $subref = delete $triggers{'prefix'};
-		$options{prefixed_with_id} = 0;
-		my @prefixes = map { $_->{prefixed_with_id} ? $_->{prefix_id} : $_->{prefix} } grep { exists $_->{prefix} } @$stack;
-		local $" = '';
-		_prefix(qr{@prefixes}, $subref);
-		delete $options{prefixed_with_id};
+        $options{resname} = $resource1;
+
+        my $altsyntax = 0;
+        if ( exists $triggers{altsyntax} ) {
+            $altsyntax = delete $triggers{altsyntax};
+        }
+
+        my $idregex = qr{[^\/\.\:\?]+};
+
+        if ( exists $triggers{idregex} ) {
+            $idregex = delete $triggers{idregex};
+        }
+
+        $options{prefix} = qr{/\Q$resource2\E};
+        $options{prefix_id} =
+          qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
+
+        if ( exists $triggers{validation} ) {
+            $options{validation_rules} = delete $triggers{validation};
+        }
+
+        if ( exists $triggers{chain} ) {
+            $options{chain} = delete $triggers{chain};
+        }
+
+        if ( exists $triggers{"chain$SUFFIX"} ) {
+            $options{chain_id} = delete $triggers{"chain$SUFFIX"};
+        }
+
+        if ( exists $triggers{ 'prefix' . $SUFFIX } ) {
+            my $subref = delete $triggers{ 'prefix' . $SUFFIX };
+            $options{prefixed_with_id} = 1;
+            my @prefixes =
+              map { $_->{prefixed_with_id} ? $_->{prefix_id} : $_->{prefix} }
+              grep { exists $_->{prefix} } @$stack;
+            local $" = '';
+            _prefix( qr{@prefixes}, $subref );
+            delete $options{prefixed_with_id};
+        }
+
+        if ( exists $triggers{prefix} ) {
+            my $subref = delete $triggers{'prefix'};
+            $options{prefixed_with_id} = 0;
+            my @prefixes =
+              map { $_->{prefixed_with_id} ? $_->{prefix_id} : $_->{prefix} }
+              grep { exists $_->{prefix} } @$stack;
+            local $" = '';
+            _prefix( qr{@prefixes}, $subref );
+            delete $options{prefixed_with_id};
+        }
+
+        my %routes;
+
+        foreach my $action (qw(index create read delete update patch)) {
+            next unless exists $triggers{$action};
+
+            my $route;
+
+            if ( $action eq 'index' ) {
+                $route = qr{/\Q$resource2\E};
+            }
+            elsif ( $action eq 'create' ) {
+                $route = qr{/\Q$resource1\E};
+            }
+            else {
+                $route = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
+            }
+
+            my $sub = _generate_sub(
+                {
+                    stack   => $stack,
+                    action  => $action,
+                    coderef => $triggers{$action},
+                }
+            );
+
+            $routes{$action} = [];
+
+            if ($altsyntax) {
+                push @{ $routes{$action} } => $triggers_map{get}
+                  ->( qr{$route/\Q$action\E\.(?<format>json|jsonp|yml|xml|dump)}
+                      => $sub );
+                push @{ $routes{$action} } =>
+                  $triggers_map{get}->( qr{$route/\Q$action\E} => $sub );
+            }
+            push @{ $routes{$action} } => $triggers_map{$action}
+              ->( qr{$route\.(?<format>json|jsonp|yml|xml|dump)} => $sub );
+            push @{ $routes{$action} } =>
+              $triggers_map{$action}->( $route => $sub );
+        }
+
+        pop @$stack;
+
+        return %routes;
     }
-	
-	my %routes;
-
-    foreach my $action (qw(index create read delete update patch)) {
-        next unless exists $triggers{$action};
-
-		my $route;
-
-		if ($action eq 'index') {
-			$route = qr{/\Q$resource2\E};
-		} elsif ($action eq 'create') {
-			$route = qr{/\Q$resource1\E};
-		} else {
-			$route = qr{/\Q$resource1\E/(?<$resource1$SUFFIX>$idregex)};
-		}
-		
-		my $sub = _generate_sub({
-			stack => $stack,
-			action  => $action,
-			coderef => $triggers{$action},
-		});
-		
-		$routes{$action} = [];
-		
-		if ($altsyntax) {
-			push @{$routes{$action}} => $triggers_map{  get  }->(qr{$route/\Q$action\E\.(?<format>json|jsonp|yml|xml|dump)} => $sub);
-			push @{$routes{$action}} => $triggers_map{  get  }->(qr{$route/\Q$action\E}                                     => $sub);
-		}
-		push @{$routes{$action}} => $triggers_map{$action}->(qr{$route\.(?<format>json|jsonp|yml|xml|dump)} => $sub);
-		push @{$routes{$action}} => $triggers_map{$action}->(   $route                                      => $sub);
-    }
-    
-	pop @$stack;
-	
-	return %routes;
-});
+);
 
 =method C<< wrap >>
 
@@ -668,43 +741,52 @@ Returns a list of all created L<Dancer::Route|Dancer::Route> objects.
 
 =cut
 
-register(wrap => sub($$$) {
-	my ($action, $route, $coderef) = @_;
-	
-	my @route = grep { defined and length } split m{/+}, $route;
-	
-	my $parent = @$stack ? $stack->[-1] : undef;
-	foreach my $route (@route) {
-		push @$stack => {
-			resname => $route
-		};
-	}
-	
-	if (defined $parent) {
-		if (exists $parent->{validation_rules} and
-			exists $parent->{validation_rules}->{wrap} and
-			exists $parent->{validation_rules}->{wrap}->{$action} and
-			exists $parent->{validation_rules}->{wrap}->{$action}->{$route}
-		) {
-			$stack->[-1]->{validation_rules} = { lc($action) => $parent->{validation_rules}->{wrap}->{$action}->{$route} };
-		}
-	}
-	
-	my $sub = _generate_sub({
-		action => lc($action),
-		stack => $stack,
-		coderef => $coderef,
-	});
-	
-	pop @$stack for @route;
-	
-	my @routes;
-	
-	push @routes => $triggers_map{lc($action)}->(qr{/\Q$route\E\.(?<format>json|jsonp|yml|xml|dump)} => $sub);
-	push @routes => $triggers_map{lc($action)}->(qr{/\Q$route\E}                                     => $sub);
-	
-	return @routes;
-});
+register(
+    wrap => sub($$$) {
+        my ( $action, $route, $coderef ) = @_;
+
+        my @route = grep { defined and length } split m{/+}, $route;
+
+        my $parent = @$stack ? $stack->[-1] : undef;
+        foreach my $route (@route) {
+            push @$stack => { resname => $route };
+        }
+
+        if ( defined $parent ) {
+            if (    exists $parent->{validation_rules}
+                and exists $parent->{validation_rules}->{wrap}
+                and exists $parent->{validation_rules}->{wrap}->{$action}
+                and
+                exists $parent->{validation_rules}->{wrap}->{$action}->{$route}
+              )
+            {
+                $stack->[-1]->{validation_rules} =
+                  { lc($action) =>
+                      $parent->{validation_rules}->{wrap}->{$action}->{$route}
+                  };
+            }
+        }
+
+        my $sub = _generate_sub(
+            {
+                action  => lc($action),
+                stack   => $stack,
+                coderef => $coderef,
+            }
+        );
+
+        pop @$stack for @route;
+
+        my @routes;
+
+        push @routes => $triggers_map{ lc($action) }
+          ->( qr{/\Q$route\E\.(?<format>json|jsonp|yml|xml|dump)} => $sub );
+        push @routes =>
+          $triggers_map{ lc($action) }->( qr{/\Q$route\E} => $sub );
+
+        return @routes;
+    }
+);
 
 =method helpers
 
@@ -743,22 +825,23 @@ Set the HTTP status to 404. This function as for argument a scalar that will be 
 =cut
 
 register send_entity => sub {
+
     # entity, status_code
-    status($_[1] || 200);
+    status( $_[1] || 200 );
     $_[0];
 };
 
-for my $code (keys %http_codes) {
-    my $helper_name = lc($http_codes{$code});
+for my $code ( keys %http_codes ) {
+    my $helper_name = lc( $http_codes{$code} );
     $helper_name =~ s/[^\w]+/_/gms;
     $helper_name = "status_${helper_name}";
 
     register $helper_name => sub {
-        if ($code >= 400) {
-            send_entity({error => $_[0]}, $code);
+        if ( $code >= 400 ) {
+            send_entity( { error => $_[0] }, $code );
         }
         else {
-            send_entity($_[0], $code);
+            send_entity( $_[0], $code );
         }
     };
 }

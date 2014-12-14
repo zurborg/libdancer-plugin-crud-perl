@@ -4,16 +4,16 @@ use Dancer::ModuleLoader;
 use Test::More import => ['!pass'];
 
 plan skip_all => "JSON is needed for this test"
-    unless Dancer::ModuleLoader->load('JSON');
+  unless Dancer::ModuleLoader->load('JSON');
 plan skip_all => "YAML is needed for this test"
-    unless Dancer::ModuleLoader->load('YAML');
-
+  unless Dancer::ModuleLoader->load('YAML');
 
 my $data = { foo => 42 };
 my $json = JSON::encode_json($data);
 my $yaml = YAML::Dump($data);
 
 {
+
     package Webservice;
     use Dancer;
     use Dancer::Plugin::CRUD;
@@ -31,37 +31,36 @@ use Dancer::Test;
 
 my @tests = (
     {
-        request => [GET => '/'],
+        request      => [ GET => '/' ],
         content_type => 'text/html',
-        response => 'root',
-    },
-    { 
-        request => [GET => '/foo.json'],
-        content_type => 'application/json',
-        response => $json
-    },
-    { 
-        request => [GET => '/foo.yml'],
-        content_type => 'text/x-yaml',
-        response => $yaml,
+        response     => 'root',
     },
     {
-        request => [GET => '/'],
+        request      => [ GET => '/foo.json' ],
+        content_type => 'application/json',
+        response     => $json
+    },
+    {
+        request      => [ GET => '/foo.yml' ],
+        content_type => 'text/x-yaml',
+        response     => $yaml,
+    },
+    {
+        request      => [ GET => '/' ],
         content_type => 'text/html',
-        response => 'root',
+        response     => 'root',
     },
 );
 
 plan tests => scalar(@tests) * 3;
 
-for my $test ( @tests ) {
-    my $response = dancer_response(@{ $test->{request} });
-    like($response->status, qr{^2\d\d$}, "status is 2xx");
-    
-    is($response->header('Content-Type'), 
-       $test->{content_type},
-       "headers have content_type set to ".$test->{content_type});
+for my $test (@tests) {
+    my $response = dancer_response( @{ $test->{request} } );
+    like( $response->status, qr{^2\d\d$}, "status is 2xx" );
 
-    is( $response->{content}, $test->{response},
-        "\$data has been encoded" );
+    is( $response->header('Content-Type'),
+        $test->{content_type},
+        "headers have content_type set to " . $test->{content_type} );
+
+    is( $response->{content}, $test->{response}, "\$data has been encoded" );
 }
