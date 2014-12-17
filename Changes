@@ -1,6 +1,8 @@
 Revision history for Dancer-Plugin-CRUD
 
 {{$NEXT}}
+
+1.031 2014-12-17
  - improve chain behaviour
  - enable Module::Signature
  - dont make signatures anymore
@@ -9,6 +11,14 @@ Revision history for Dancer-Plugin-CRUD
  - remove experimental features like given
  - fix typo
  - tidy up code
+
+ [API CHANGES]
+
+ [BUG FIXES]
+
+ [DOCUMENTATION]
+
+ [ENHANCEMENTS]
 
 1.030 2014-12-01
  - change version format
