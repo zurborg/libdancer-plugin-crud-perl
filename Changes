@@ -8,6 +8,7 @@ Revision history for Dancer-Plugin-CRUD
  - on perl < 5.18 there is no 'experimental' warnings category
  - remove experimental features like given
  - fix typo
+ - tidy up code
 
 1.030 2014-12-01
  - change version format
