@@ -383,11 +383,11 @@ register prepare_serializer_for_format => sub () {
 
 This keyword lets you declare a resource your application will handle.
 
-Derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST>, this method has rewritten to provide a more slightly convention. C<get> has been renamed to C<read> and three new actions has been added: C<index>, C<patch>, C<prefix> and C<prefix_id>
+Derived from L<Dancer::Plugin::REST|Dancer::Plugin::REST>, this method was rewritten to provide a more conventional approach to CRUD. C<get> has been renamed to C<read> and three new actions have been added: C<index>, C<patch>, C<prefix> and C<prefix_id>
 
-Also, L<Text::Pluralize|Text::Pluralize> is applied to resource name with count=1 for singular variant and count=2 for plural variant. If you don't provide a singular/plural variant (i.e. resource name contains parenthesis) the singular and the plural becomes same.
+Also, L<Text::Pluralize|Text::Pluralize> is applied to resource namse with count=1 for the singular variant and count=2 for the plural variant. If you don't provide a singular/plural variant (i.e. resource name contains parenthesis) the singular and the plural will be the same.
 
-The id name is derived from singular resource name, appended with C<_id>.
+The id name is derived from the singular resource name with C<_id> appended to it.
 
     resource 'user(s)' =>
         index  => sub { ... }, # return all users
@@ -458,7 +458,7 @@ Hint: resources can be stacked with C<prefix>/C<prefix_id>:
 				}; # GET /foo/123/bar/456
 		};
 
-When is return value is a HTTP status code (three digits), C<status(...)> is applied to it. A second return value may be the value to be returned to the client itself:
+When the return value is an HTTP status code (three digits), C<status(...)> is applied to it. A second return value may be the value to be returned to the client itself:
 
 	sub {
 		return 200
@@ -510,7 +510,7 @@ The hashref C<validation> accepts seven keywords:
 
 =item I<generic>
 
-These are generic rules, used in every action. For the actions I<index> and I<create>, the fields I<<< C<< $resource >>_id >>> are ignored, since they aren't needed.
+These are generic rules, used in every action. For the actions I<index> and I<create>, the fields named I<<< C<< $resource >>_id >>> are ignored, since they aren't needed.
 
 =item I<index>, I<create>, I<read>, I<update>, I<delete>
 
@@ -518,11 +518,11 @@ These rules are merged together with I<generic>.
 
 =item I<prefix>, I<prefix_id>
 
-These rules are merged together with I<generic>, but they can only used when C<resource()> is used in the prefix subs.
+These rules are merged together with I<generic>, but they can only be used when C<resource()> is used in the prefix subs.
 
 =item I<wrap>
 
-These rules apply when in a prefix or prefix_id routine the I<wrap> keyword is used:
+These rules apply if in a prefix or prefix_id routine the I<wrap> keyword is used:
 
 	resource foo =>
 		validation => {
@@ -540,7 +540,7 @@ These rules apply when in a prefix or prefix_id routine the I<wrap> keyword is u
 
 =back
 
-The id-fields (I<<< C<< $resource >>_id >>>, ...) are automatically prepended to the I<fields> param of Validate::Tiny. There is no need to define them especially.
+The id-fields (I<<< C<< $resource >>_id >>>, ...) are automatically prepended to the I<fields> param of Validate::Tiny. There is no need to define them explicitly.
 
 An advantage is the feature of stacking resources and to define validation rules only once.
 
@@ -573,9 +573,9 @@ Example:
 
 =head3 Chaining actions together
 
-To avoid redundant code, the keywords I<chain> and I<chain_id> may used to define coderefs called every time the resource (and possible parent resources) is triggered, respective of the method.
+To avoid redundant code, the keywords I<chain> and I<chain_id> may be used to define coderefs called every time the resource (and possible parent resources) are triggered, respective of the method.
 
-I<chain> applies to method I<index> only. I<chain_id> (where the suffix I<_id> depends on what C<$SUFFIX> says) applies to all other methods. I<chain_id> is called with a single parameter: the value of the corresponding capture.
+I<chain> applies to method I<index> only. I<chain_id> (where the suffix is I<_id> depends on what C<$SUFFIX> says) applies to all other methods. I<chain_id> is called with a single parameter: the value of the corresponding capture.
 
 Example:
 
@@ -592,9 +592,9 @@ Example:
 
 When resource I</foo/123> is triggered, the variable C<my_foo_id> is set to 123 and the single text 123 is returned. When resource I</foo/123/bar/456> is triggered, the variable C<my_foo_id> is set to 123 and, of course, C<my_bar_id> is set to 456 and the single return text is 123456. 
 
-This is useful to obtain parent objects from DB and store it into the var stack.
+This is useful to obtain parent objects from a DB and store it into the var stack.
 
-B<HINT>: In a earlier release the keyword I<chain> applied to all methods. If you have ever used version 1.03, please keep in mind that this behaviour has changed meanwhile.
+B<HINT>: In an earlier release the keyword I<chain> applied to all methods. If you have ever used version 1.03, please keep in mind that this behaviour has changed meanwhile.
 	
 =cut
 
@@ -728,12 +728,12 @@ Synopsis:
 		},
 	;
 
-I<wrap> uses the same wrapper as for the actions in I<resource>. Any beviour there also applies here. For a better explaination, these resolves to the same routes:
+I<wrap> uses the same wrapper as for the actions in I<resource>. Any behaviour there also applies here. For a better explanation, these resolve to the same route:
 
 	resource foo => read => sub { ... };
 	wrap read => foo => sub { ... };
 
-The first argument is an CRUD action (I<index>, I<create>, I<read>, I<update>, I<delete>) or a HTTP method (I<GET>, I<POST>, I<PUT>, I<DELETE>, I<PATCH>) and is case-insensitve. The second argument is a route name. A leading slash will be prepended if the route contains to slashes. The third argument is the well known coderef.
+The first argument is a CRUD action (I<index>, I<create>, I<read>, I<update>, I<delete>) or an HTTP method (I<GET>, I<POST>, I<PUT>, I<DELETE>, I<PATCH>) and is case-insensitive. The second argument is a route name. A leading slash will be prepended if the route contains no slashes. The third argument is the well known coderef.
 
 Please keep in mind that I<wrap> creates two routes: I<<< /C<< $route >> >>> and I<<< /C<< $route >>.:format >>>.
 
@@ -814,13 +814,13 @@ Set the HTTP status to 202
 
     status_bad_request("user foo can't be found");
 
-Set the HTTP status to 400. This function as for argument a scalar that will be used under the key B<error>.
+Set the HTTP status to 400. This function takes one scalar argument that will be used under the key B<error>.
 
 =head3 status_not_found
 
     status_not_found("users doesn't exists");
 
-Set the HTTP status to 404. This function as for argument a scalar that will be used under the key B<error>.
+Set the HTTP status to 404. This function takes one scalar argument that will be used under the key B<error>.
 
 =cut
 
