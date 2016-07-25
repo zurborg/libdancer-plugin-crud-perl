@@ -212,12 +212,25 @@ sub _generate_sub {
                     %{ params('body') },
                     %{ captures() || {} }
                 };
-                my $result = Validate::Tiny->new(
-                    $input,
-                    {
-                        %$rules, fields => [ @idfields, @{ $rules->{fields} } ]
-                    }
-                );
+                my $result;
+                if ( Validate::Tiny->can('check') ) {
+                    $result = Validate::Tiny->new()->check(
+                        $input,
+                        {
+                            %$rules,
+                            fields => [ @idfields, @{ $rules->{fields} } ]
+                        }
+                    );
+                }
+                else {
+                    $result = Validate::Tiny->new(
+                        $input,
+                        {
+                            %$rules,
+                            fields => [ @idfields, @{ $rules->{fields} } ]
+                        }
+                    );
+                }
                 unless ( $result->success ) {
                     status(400);
                     return { error => $result->error };
